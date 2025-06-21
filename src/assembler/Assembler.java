@@ -15,16 +15,14 @@ import components.Register;
 import architecture.Architecture;
 
 public class Assembler {
-
 	private ArrayList<String> lines;
 	private ArrayList<String> objProgram;
 	private ArrayList<String> execProgram;
-	private Architecture arch;
-	private ArrayList<String>commands;
-	private ArrayList<String>labels;
+	private ArrayList<String> commands;
+	private ArrayList<String> labels;
 	private ArrayList<Integer> labelsAdresses;
-	private ArrayList<String>variables;
-
+	private ArrayList<String> variables;
+	private Architecture arch;
 
 	public Assembler() {
 		lines = new ArrayList<>();
@@ -37,17 +35,15 @@ public class Assembler {
 		commands = arch.getCommandsList();
 	}
 
-	//getters
-
 	public ArrayList<String> getObjProgram() {
 		return objProgram;
 	}
 
 	/**
 	 * These methods getters and set below are used only for TDD purposes
+	 *
 	 * @param lines
 	 */
-
 	protected ArrayList<String> getLabels() {
 		return labels;
 	}
@@ -72,7 +68,6 @@ public class Assembler {
 		this.execProgram = lines;
 	}
 
-
 	/*
 	 * An assembly program is always in the following template
 	 * <variables>
@@ -88,28 +83,30 @@ public class Assembler {
 	 * 		The executable file must have the extention .dxf
 	 */
 
-
-
 	/**
-	 * This method reads an entire file in assembly
+	 * Read the lines of a file into the assembler.
+	 *
 	 * @param filename
 	 * @throws IOException
 	 */
 	public void read(String filename) throws IOException {
-		   BufferedReader br = new BufferedReader(new
-		   FileReader(filename+".dsf"));
-		   String linha;
-		   while ((linha = br.readLine()) != null) {
-			     lines.add(linha);
-			}
-			br.close();
+		FileReader fr = new FileReader(filename + ".dsf");
+		BufferedReader br = new BufferedReader(fr);
 
+		while (true) {
+			String line = br.readLine();
+			if (line == null)
+				break;
+			lines.add(line);
+		}
+
+		br.close();
 	}
-
 
 	/**
 	 * This method scans the strings in lines
 	 * generating, for each one, the corresponding machine code
+	 *
 	 * @param lines
 	 */
 	public void parse() {
@@ -131,11 +128,10 @@ public class Assembler {
 
 	}
 
-
-
 	/**
-	 * This method processes a command, putting it and its parameters (if they have)
-	 * into the final array
+	 * This method processes a command, putting it and its parameters (if they
+	 * have) into the final array
+	 *
 	 * @param tokens
 	 */
 	protected void proccessCommand(String[] tokens) {
@@ -190,73 +186,69 @@ public class Assembler {
 		}
 	}
 
-
 	/**
-	 * This method uses the tokens to search a command
-	 * in the commands list and returns its id.
-	 * Some commands (as move) can have multiple formats (reg reg, mem reg, reg mem) and
-	 * multiple ids, one for each format.
+	 * Use the tokens to search a command in the commands list and return its
+	 * ID. Some commands (as move) can have multiple formats (reg reg, mem reg,
+	 * reg mem) and multiple ids, one for each format.
+	 *
 	 * @param tokens
 	 * @return
 	 */
 	private int findCommandNumber(String[] tokens) {
 		int p = commands.indexOf(tokens[0]);
-		if (p<0){ //the command isn't in the list. So it must have multiple formats
+		if (p < 0) { // the command isn't in the list. So it must have multiple formats
 			if ("move".equals(tokens[0])) //the command is a move
-				p = proccessMove(tokens);
+				p = processMove(tokens);
 		}
 		return p;
 	}
 
 	/**
-	 * This method proccess a move command.
-	 * It must have differents formats, meaning differents internal commands
-	 * @param tokens
-	 * @return
+	 * Process a move command.
 	 */
-	private int proccessMove(String[] tokens) {
+	private int processMove(String[] tokens) {
 		String p1 = tokens[1];
 		String p2 = tokens[2];
-		int p=-1;
-		if ((p1.startsWith("%"))&&(p2.startsWith("%"))) { //this is a moveRegReg comand
+		int p = -1;
+
+		// this is a moveRegReg comand
+		if ((p1.startsWith("%")) && (p2.startsWith("%")))
 			p = commands.indexOf("moveRegReg");
-		}
+
 		return p;
 	}
 
 	/**
-	 * This method creates the executable program from the object program
-	 * Step 1: check if all variables and labels mentioned in the object
-	 * program are declared in the source program
-	 * Step 2: allocate memory addresses (space), from the end to the begin (stack)
-	 * to store variables
-	 * Step 3: identify memory positions to the labels
-	 * Step 4: make the executable by replacing the labels and the variables by the
-	 * corresponding memory addresses
+	 * Create the executable program from the object program.
+	 *
 	 * @param filename
 	 * @throws IOException
 	 */
 	public void makeExecutable(String filename) throws IOException {
-		if (!checkLabels())
+		if (!checkProperDeclaration())
 			return;
+
+		// allocate memory space to store program and variables
 		execProgram = (ArrayList<String>) objProgram.clone();
+
 		replaceAllVariables();
-		replaceLabels(); //replacing all labels by the address they refer to
-		replaceRegisters(); //replacing all registers by the register id they refer to
+		replaceLabels();
+		replaceRegisters();
+
+		// save to file
 		saveExecFile(filename);
-		System.out.println("Finished");
 	}
 
 	/**
-	 * This method replaces all the registers names by its correspondings ids.
-	 * registers names must be prefixed by %
+	 * Replace all the register names in the executable program with its
+	 * corresponding IDs.
 	 */
 	protected void replaceRegisters() {
-		int p=0;
-		for (String line:execProgram) {
-			if (line.startsWith("%")){ //this line is a register
-				line = line.substring(1, line.length());
-				int regId = searchRegisterId(line, arch.getRegistersList());
+		int p = 0;
+		for (String line : execProgram) {
+			// A % on the start of the line indicates a register name
+			if (line.startsWith("%")) {
+				int regId = searchRegisterId(line.substring(1, line.length()));
 				String newLine = Integer.toString(regId);
 				execProgram.set(p, newLine);
 			}
@@ -266,20 +258,22 @@ public class Assembler {
 	}
 
 	/**
-	 * This method replaces all variables by their addresses.
-	 * The addresses o0f the variables startes in the end of the memory
-	 * and decreases (creating a stack)
+	 * Replace all variables names by their respective addresses.
+	 *
+	 * The address of the first variable is at the end of the memory and
+	 * successive variables are on the addresses immediately before.
 	 */
 	protected void replaceAllVariables() {
-		int position = arch.getMemorySize()-1; //starting from the end of the memory
-		for (String var : this.variables) { //scanning all variables
+		int position = arch.getMemorySize() - 1; // starting from the end of the memory
+		for (String var : this.variables) { // scanning all variables
 			replaceVariable(var, position);
-			position --;
+			position--;
 		}
 	}
 
 	/**
-	 * This method saves the execFile collection into the output file
+	 * Save the execFile collection into the output file.
+	 *
 	 * @param filename
 	 * @throws IOException
 	 */
@@ -294,17 +288,17 @@ public class Assembler {
 	}
 
 	/**
-	 * This method replaces all labels in the execprogram by the corresponding
-	 * address they refer to
+	 * Replace each label in the executable program by the corresponding
+	 * address it refers to.
 	 */
 	protected void replaceLabels() {
-		int i=0;
-		for (String label : labels) { //searching all labels
-			label = "&"+label;
+		int i = 0;
+		for (String label : labels) { // searching all labels
+			label = "&" + label;
 			int labelPointTo = labelsAdresses.get(i);
 			int lineNumber = 0;
 			for (String l : execProgram) {
-				if (l.equals(label)) {//this label must be replaced by the address
+				if (l.equals(label)) { // this label must be replaced by the address
 					String newLine = Integer.toString(labelPointTo); // the address
 					execProgram.set(lineNumber, newLine);
 				}
@@ -312,45 +306,43 @@ public class Assembler {
 			}
 			i++;
 		}
-
 	}
 
 	/**
-	 * This method replaces all occurences of a variable
-	 * name found in the object program by his address
-	 * in the executable program
+	 * Replace all ocurrences of a variable name found in the program by its
+	 * address in the executable program.
+	 *
 	 * @param var
 	 * @param position
 	 */
 	protected void replaceVariable(String var, int position) {
-		var = "&"+var;
-		int i=0;
-		for (String s:execProgram) {
-			if (s.equals(var)) {
-				s = Integer.toString(position);
-				execProgram.set(i, s);
-			}
+		var = "&" + var;
+		int i = 0;
+		for (String s : execProgram) {
+			if (s.equals(var))
+				execProgram.set(i, Integer.toString(position));
 			i++;
 		}
 	}
 
 	/**
-	 * This method checks if all labels and variables in the object program were in the source
-	 * program.
-	 * The labels and the variables collection are used for this
+	 * Check if all labels and variables in the object program were in the
+	 * source program.
+	 *
+	 * The `labels` and `variables` collections are used for this.
 	 */
-	protected boolean checkLabels() {
+	protected boolean checkProperDeclaration() {
 		System.out.println("Checking labels and variables");
-		for (String line:objProgram) {
+		for (String line : objProgram) {
 			boolean found = false;
-			if (line.startsWith("&")) { //if starts with "&", it is a label or a variable
+			if (line.startsWith("&")) { // if starts with "&", it is a label or a variable
 				line = line.substring(1, line.length());
 				if (labels.contains(line))
 					found = true;
 				if (variables.contains(line))
 					found = true;
 				if (!found) {
-					System.out.println("FATAL ERROR! Variable or label "+line+" not declared!");
+					System.out.printf("FATAL ERROR! Variable or label %s not declared!\n", line);
 					return false;
 				}
 			}
@@ -359,18 +351,15 @@ public class Assembler {
 	}
 
 	/**
-	 * This method searches for a register in the architecture register list
-	 * by the register name
-	 * @param line
-	 * @param registersList
-	 * @return
+	 * Search for a register in the architecture's register list by its name.
+	 *
+	 * @return register id (>= 0) on success, -1 on failure
 	 */
-	private int searchRegisterId(String line, ArrayList<Register> registersList) {
-		int i=0;
-		for (Register r:registersList) {
-			if (line.equals(r.getRegisterName())) {
+	private int searchRegisterId(String line) {
+		int i = 0;
+		for (Register r : arch.getRegistersList()) {
+			if (line.equals(r.getRegisterName()))
 				return i;
-			}
 			i++;
 		}
 		return -1;
@@ -395,6 +384,7 @@ public class Assembler {
 
 		System.out.printf("Generating executable: %s.dxf\n", filename);
 		assembler.makeExecutable(filename);
-	}
 
+		System.out.println("Assembling finished!");
+	}
 }
