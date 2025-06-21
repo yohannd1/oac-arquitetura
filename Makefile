@@ -13,6 +13,6 @@ clean:
 	if [ -r $(BUILD_DIR) ]; then rm -r $(BUILD_DIR); fi
 
 run: build
-	java -jar $(BUILD_DIR)/main.jar
+	java -jar $(BUILD_DIR)/main.jar program
 
 .PHONY: build clean run
