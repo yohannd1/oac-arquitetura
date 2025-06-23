@@ -66,22 +66,6 @@ public class Assembler {
 		this.execProgram = lines;
 	}
 
-	/*
-	 * TODO: move this to its own file, perhaps?
-	 *
-	 * An assembly program is always in the following template
-	 * <variables>
-	 * <commands>
-	 * Obs.
-	 * 		variables names are always started with alphabetical char
-	 * 	 	variables names must contains only alphabetical and numerical chars
-	 *      variables names never uses any command name
-	 * 		names ended with ":" identifies labels i.e. address in the memory
-	 * 		Commands are only that ones known in the architecture. No comments allowed
-	 *
-	 * 		The assembly file must have the extention .dsf
-	 * 		The executable file must have the extention .dxf
-	 */
 
 	/**
 	 * Read the lines of a file into the assembler.
@@ -116,8 +100,7 @@ public class Assembler {
 			String currentLine = lines.get(i).trim();
 			String varName;
 
-			if (currentLine.length() == 0) {
-				System.err.println("Got empty line");
+			if (Parser.isSkippableLine(currentLine)) {
 				// skip empty line
 				i++;
 			} else if ((varName = Parser.parseVariableDecl(currentLine)) != null) {
@@ -136,9 +119,8 @@ public class Assembler {
 			String labelName;
 			Command command;
 
-			if (currentLine.length() == 0) {
+			if (Parser.isSkippableLine(currentLine)) {
 				// skip empty line
-				System.err.println("Got empty line");
 				i++;
 			} else if ((labelName = Parser.parseLabelDecl(currentLine)) != null) {
 				// this line is a label declaration
@@ -148,7 +130,7 @@ public class Assembler {
 				i++;
 			} else if ((command = Parser.parseCommand(currentLine.split(" "))) != null) {
 				// this line is a command
-				System.err.println("Got COMMAND " + command);
+				System.err.println("Got " + command);
 
 				objProgram.add(Integer.toString(command.id.toInt()));
 				for (String arg : command.args) {

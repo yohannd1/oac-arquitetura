@@ -10,4 +10,9 @@ public class Command {
 		this.id = id;
 		this.args = args;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("Command[id=%s, args=%s]", id, args);
+	}
 }
