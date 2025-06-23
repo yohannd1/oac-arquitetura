@@ -5,30 +5,30 @@ de Computadores), no semestre 2025.1.
 
 Nosso grupo ficou com: Arquitetura B, Assembly 4.
 
-![](https://lh6.googleusercontent.com/Oe9nmaltMB7KBEQxLVH1MgslHcKZD38_VLoVhTgtMdqwsPr_8ZGDcA4N2H3y4PFo0WL_bsozBKFFkxMiuhd6wwWFEERfXt_c22xikGjH3n9r2EL0RvPDMwLenphVpHOf5r11tIYD_yd4BXIyHhI-V_WgN-0UaxMHRVa-MhCPfUvO7DdO9Y1P2g=w1280)
+![](arq_b.jpeg)
 
 ```
-Microprograma: add %<regA> %<regB>        || RegB <- RegA + RegB
-Microprograma: add <mem> %<regA>          || RegA <- memória[mem] + RegA
-Microprograma: add %<regA> <mem>          || Memória[mem] <- RegA + memória[mem]
-Microprograma: sub <regA> <regB>          || RegB <- RegA - RegB
-Microprograma: sub <mem> %<regA>          || RegA <- memória[mem] - RegA
-Microprograma: sub %<regA> <mem>          || memória[mem] <- RegA - memória[mem]
-Microprograma: move <mem> %<regA>         || RegA <- memória[mem]
-Microprograma: move %<regA> <mem>         || memória[mem] <- RegA
-Microprograma: move %<regA> %<regB>       || RegB <- RegA
-Microprograma: move imm %<regA>           || RegA <- immediate
-Microprograma: inc %<regA>                || RegA ++
-Microprograma: inc <mem>                  || memória[mem] ++
-Microprograma: jmp <mem>                  || PC <- mem (desvio incondicional)
-Microprograma: jn <mem>                   || se última operação<0 então PC <- mem (desvio condicional)
-Microprograma: jz <mem>                   || se última operação=0 então PC <- mem (desvio condicional)
-Microprograma: jnz <mem>                  || se última operação|=0 então PC <- mem (desvio condicional)
-Microprograma: jeq %<regA> %<regB> <mem>  || se RegA==RegB então PC <- mem (desvio condicional)
-Microprograma: jgt %<regA> %<regB> <mem>  || se RegA>RegB então PC <- mem (desvio condicional)
-Microprograma: jlw %<regA> %<regB> <mem>  || se RegA<RegB então PC <- mem (desvio condicional)
-Microprograma: call <mem>                 || PC <- mem ( (desvio incondicional) mas, antes de desviar, empilha o endereço de retorno (endereço da instrução imediatamente posterior ao call (push(PC++) )
-Microprograma: ret                        || PC <- pop() (desvio incondicional)
+add %<regA> %<regB>        || RegB <- RegA + RegB
+add <mem> %<regA>          || RegA <- memória[mem] + RegA
+add %<regA> <mem>          || Memória[mem] <- RegA + memória[mem]
+sub <regA> <regB>          || RegB <- RegA - RegB
+sub <mem> %<regA>          || RegA <- memória[mem] - RegA
+sub %<regA> <mem>          || memória[mem] <- RegA - memória[mem]
+move <mem> %<regA>         || RegA <- memória[mem]
+move %<regA> <mem>         || memória[mem] <- RegA
+move %<regA> %<regB>       || RegB <- RegA
+move imm %<regA>           || RegA <- immediate
+inc %<regA>                || RegA ++
+inc <mem>                  || memória[mem] ++
+jmp <mem>                  || PC <- mem (desvio incondicional)
+jn <mem>                   || se última operação<0 então PC <- mem (desvio condicional)
+jz <mem>                   || se última operação=0 então PC <- mem (desvio condicional)
+jnz <mem>                  || se última operação|=0 então PC <- mem (desvio condicional)
+jeq %<regA> %<regB> <mem>  || se RegA==RegB então PC <- mem (desvio condicional)
+jgt %<regA> %<regB> <mem>  || se RegA>RegB então PC <- mem (desvio condicional)
+jlw %<regA> %<regB> <mem>  || se RegA<RegB então PC <- mem (desvio condicional)
+call <mem>                 || PC <- mem ( (desvio incondicional) mas, antes de desviar, empilha o endereço de retorno (endereço da instrução imediatamente posterior ao call (push(PC++) )
+ret                        || PC <- pop() (desvio incondicional)
 ```
 
 Referência do trabalho (e base para o código): https://sites.google.com/site/alvarodegas/degas-home-page/acad%C3%AAmico/disciplinas/2025-1/organiza%C3%A7%C3%A3o-e-arquitetura-de-computadores
