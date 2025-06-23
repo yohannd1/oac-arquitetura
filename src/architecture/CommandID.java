@@ -1,6 +1,6 @@
 package architecture;
 
-public enum Command {
+public enum CommandID {
 	ADD_REG_REG, // add %<regA> %<regB>
 	ADD_MEM_REG, // add <mem> %<regA>
 	ADD_REG_MEM, // add %<regA> <mem>
@@ -23,9 +23,11 @@ public enum Command {
 	CALL, // call <mem>
 	RET; // ret
 
-	static private Command[] variants = Command.values();
+	static private CommandID[] variants = CommandID.values();
 
-	static public Command fromInt(int x) {
+	static public CommandID fromInt(int x) {
+		if (x < 0 || x >= variants.length)
+			return null;
 		return variants[x];
 	}
 

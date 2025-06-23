@@ -3,16 +3,14 @@ package assembler;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import components.Register;
-
 import architecture.Architecture;
+import architecture.CommandID;
 
 public class Assembler {
 	private ArrayList<String> lines;
@@ -69,6 +67,8 @@ public class Assembler {
 	}
 
 	/*
+	 * TODO: move this to its own file, perhaps?
+	 *
 	 * An assembly program is always in the following template
 	 * <variables>
 	 * <commands>
@@ -104,103 +104,63 @@ public class Assembler {
 	}
 
 	/**
-	 * This method scans the strings in lines
-	 * generating, for each one, the corresponding machine code
+	 * Scan the lines from the loaded file, attributing meaning to each line.
 	 *
 	 * @param lines
 	 */
-	public void parse() {
-		for (String s:lines) {
-			String tokens[] = s.split(" ");
-			if (findCommandNumber(tokens)>=0) { //the line is a command
-				proccessCommand(tokens);
+	public void parseAll() throws ParseException {
+		int i = 0;
+
+		// parse variable declarations first
+		while (i < lines.size()) {
+			String currentLine = lines.get(i).trim();
+			String varName;
+
+			if (currentLine.length() == 0) {
+				System.err.println("Got empty line");
+				// skip empty line
+				i++;
+			} else if ((varName = Parser.parseVariableDecl(currentLine)) != null) {
+				System.err.println("Got VARIABLE " + varName);
+				// this line is a variable declaration
+				variables.add(varName);
+				i++;
+			} else {
+				break;
 			}
-			else { //the line is not a command: so, it can be a variable or a label
-				if (tokens[0].endsWith(":")){ //if it ends with : it is a label
-					String label = tokens[0].substring(0, tokens[0].length()-1); //removing the last character
-					labels.add(label);
-					labelsAdresses.add(objProgram.size());
+		}
+
+		// parse the rest
+		while (i < lines.size()) {
+			String currentLine = lines.get(i).trim();
+			String labelName;
+			Command command;
+
+			if (currentLine.length() == 0) {
+				// skip empty line
+				System.err.println("Got empty line");
+				i++;
+			} else if ((labelName = Parser.parseLabelDecl(currentLine)) != null) {
+				// this line is a label declaration
+				System.err.println("Got LABEL " + labelName + " at addr " + objProgram.size());
+				labels.add(labelName);
+				labelsAdresses.add(objProgram.size());
+				i++;
+			} else if ((command = Parser.parseCommand(currentLine.split(" "))) != null) {
+				// this line is a command
+				System.err.println("Got COMMAND " + command);
+
+				objProgram.add(Integer.toString(command.id.toInt()));
+				for (String arg : command.args) {
+					if (!arg.isEmpty())
+						objProgram.add(arg);
 				}
-				else //otherwise, it must be a variable
-					variables.add(tokens[0]);
+
+				i++;
+			} else {
+				throw new ParseException("Could not parse line " + (i + 1) + ": " + currentLine);
 			}
 		}
-
-	}
-
-	/**
-	 * This method processes a command, putting it and its parameters (if they
-	 * have) into the final array
-	 *
-	 * @param tokens
-	 */
-	protected void proccessCommand(String[] tokens) {
-		String command = tokens[0];
-		String parameter ="";
-		String parameter2 = "";
-		int commandNumber = findCommandNumber(tokens);
-		if (commandNumber == 0) { //must to proccess an add command
-			parameter = tokens[1];
-			parameter = "&"+parameter; //this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 1) { //must to proccess an sub command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 2) { //must to proccess an jmp command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 3) { //must to proccess an jz command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 4) { //must to proccess an jn command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 5) { //must to proccess an read command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 6) { //must to proccess an store command
-			parameter = tokens[1];
-			parameter = "&"+parameter;//this is a flag to indicate that is a position in memory
-		}
-		if (commandNumber == 7) { //must to proccess an ldi command
-			parameter = tokens[1];
-		}
-		if (commandNumber == 8) { //must to proccess an inc command
-
-		}
-		if (commandNumber == 9) { //must to proccess an moveRegReg command
-			parameter = tokens[1];
-			parameter2 = tokens[2];
-		}
-		objProgram.add(Integer.toString(commandNumber));
-		if (!parameter.isEmpty()) {
-			objProgram.add(parameter);
-		}
-		if (!parameter2.isEmpty()) {
-			objProgram.add(parameter2);
-		}
-	}
-
-	/**
-	 * Use the tokens to search a command in the commands list and return its
-	 * ID. Some commands (as move) can have multiple formats (reg reg, mem reg,
-	 * reg mem) and multiple ids, one for each format.
-	 *
-	 * @param tokens
-	 * @return
-	 */
-	private int findCommandNumber(String[] tokens) {
-		int p = commands.indexOf(tokens[0]);
-		if (p < 0) { // the command isn't in the list. So it must have multiple formats
-			if ("move".equals(tokens[0])) //the command is a move
-				p = processMove(tokens);
-		}
-		return p;
 	}
 
 	/**
@@ -254,7 +214,6 @@ public class Assembler {
 			}
 			p++;
 		}
-
 	}
 
 	/**
@@ -278,13 +237,12 @@ public class Assembler {
 	 * @throws IOException
 	 */
 	private void saveExecFile(String filename) throws IOException {
-		File file = new File(filename+".dxf");
+		File file = new File(filename + ".dxf");
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		for (String l : execProgram)
-			writer.write(l+"\n");
+			writer.write(l + "\n");
 		writer.write("-1"); //-1 is a flag indicating that the program is finished
 		writer.close();
-
 	}
 
 	/**
@@ -332,7 +290,7 @@ public class Assembler {
 	 * The `labels` and `variables` collections are used for this.
 	 */
 	protected boolean checkProperDeclaration() {
-		System.out.println("Checking labels and variables");
+		System.err.println("Checking labels and variables");
 		for (String line : objProgram) {
 			boolean found = false;
 			if (line.startsWith("&")) { // if starts with "&", it is a label or a variable
@@ -342,7 +300,7 @@ public class Assembler {
 				if (variables.contains(line))
 					found = true;
 				if (!found) {
-					System.out.printf("FATAL ERROR! Variable or label %s not declared!\n", line);
+					System.err.printf("FATAL ERROR! Variable or label %s not declared!\n", line);
 					return false;
 				}
 			}
@@ -367,8 +325,8 @@ public class Assembler {
 
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {
-			System.out.println("Usage: assembler <INPUT>");
-			System.out.println("INPUT must be the name of a .dsf file, without the extension");
+			System.err.println("Usage: assembler <INPUT>");
+			System.err.println("INPUT must be the name of a .dsf file, without the extension");
 			System.exit(2);
 		}
 
@@ -376,15 +334,19 @@ public class Assembler {
 
 		Assembler assembler = new Assembler();
 
-		System.out.printf("Reading source assembler file: %s.dsf\n", filename);
-		assembler.read(filename);
+		try {
+			System.err.printf("Reading source assembler file: %s.dsf\n", filename);
+			assembler.read(filename);
 
-		System.out.println("Generating the object program");
-		assembler.parse();
+			System.err.println("Generating the object program");
+			assembler.parseAll();
 
-		System.out.printf("Generating executable: %s.dxf\n", filename);
-		assembler.makeExecutable(filename);
+			System.err.printf("Generating executable: %s.dxf\n", filename);
+			assembler.makeExecutable(filename);
 
-		System.out.println("Assembling finished!");
+			System.err.println("Assembling finished!");
+		} catch (ParseException ex) {
+			System.err.println("Error while parsing: " + ex);
+		}
 	}
 }
