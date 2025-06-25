@@ -66,7 +66,6 @@ public class Assembler {
 		this.execProgram = lines;
 	}
 
-
 	/**
 	 * Read the lines of a file into the assembler.
 	 *
@@ -143,21 +142,6 @@ public class Assembler {
 				throw new ParseException("Could not parse line " + (i + 1) + ": " + currentLine);
 			}
 		}
-	}
-
-	/**
-	 * Process a move command.
-	 */
-	private int processMove(String[] tokens) {
-		String p1 = tokens[1];
-		String p2 = tokens[2];
-		int p = -1;
-
-		// this is a moveRegReg comand
-		if ((p1.startsWith("%")) && (p2.startsWith("%")))
-			p = commands.indexOf("moveRegReg");
-
-		return p;
 	}
 
 	/**
