@@ -33,7 +33,7 @@ public class Architecture {
 	private Register REG2;
 	private Register REG3;
 
-	private ArrayList<Register> registerLookup;
+	public Register[] registerList;
 
 	private Ula ula;
 	private Demux demux;
@@ -48,8 +48,8 @@ public class Architecture {
 
 		PC = new Register("PC", intBus, intBus);
 		IR = new Register("IR", intBus, intBus);
-		SP = new Register("SP", intBus, intBus);
-		SP.setData(memorySize);
+		SP = new Register("SP", intBus, intBus); // TODO: adicionar StkTOP e StkBOT (não SP)
+		// SP.setData(memorySize); // FIXME: não precisa inicializar SP aqui - o programa é responsável de fazer isso
 		Flags = new Register("Flags", 2, intBus);
 
 		REG0 = new Register("REG0", intBus, intBus);
@@ -57,11 +57,7 @@ public class Architecture {
 		REG2 = new Register("REG2", intBus, intBus);
 		REG3 = new Register("REG3", intBus, intBus);
 
-		registerLookup = new ArrayList<>();
-		registerLookup.add(REG0);
-		registerLookup.add(REG1);
-		registerLookup.add(REG2);
-		registerLookup.add(REG3);
+		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP };
 
 		ula = new Ula(intBus, intBus);
 
@@ -112,19 +108,19 @@ public class Architecture {
 	}
 
 	private void registersRead() {
-		registerLookup.get(demux.getValue()).read();
+		registerList[demux.getValue()].read();
 	}
 
 	private void registersInternalRead() {
-		registerLookup.get(demux.getValue()).internalRead();
+		registerList[demux.getValue()].internalRead();
 	}
 
 	private void registersStore() {
-		registerLookup.get(demux.getValue()).store();
+		registerList[demux.getValue()].store();
 	}
 
 	private void registersInternalStore() {
-		registerLookup.get(demux.getValue()).internalStore();
+		registerList[demux.getValue()].internalStore();
 	}
 
 	private void add_rr() {
@@ -500,10 +496,11 @@ public class Architecture {
 
 		ula.sub();
 
-		if (ula.getInternal(1) > 0) {
-			intBus.put(mem_addr);
-			PC.store();
-		}
+		// FIXME: não podemos usar if aqui!
+		// if (ula.getInternal(1) > 0) {
+		// 	intBus.put(mem_addr);
+		// 	PC.store();
+		// }
 	}
 
 	private void jlw() {
@@ -529,10 +526,11 @@ public class Architecture {
 
 		ula.sub();
 
-		if (ula.getInternal(1) < 0) {
-			intBus.put(mem_addr);
-			PC.store();
-		}
+		// FIXME: não podemos usar if aqui!
+		// if (ula.getInternal(1) < 0) {
+		// 	intBus.put(mem_addr);
+		// 	PC.store();
+		// }
 	}
 
 	private void call() {
@@ -543,7 +541,7 @@ public class Architecture {
 
 		SP.read();
 		ula.store(0);
-		ula.dec();
+		// ula.dec(); // FIXME: a ULA não tem dec. talvez ler um -1 da memória e somar?
 		ula.read(0);
 		SP.store();
 
@@ -575,7 +573,6 @@ public class Architecture {
 		ula.read(0);
 		SP.store();
 	}
-
 
 	public void readExec(String filename) throws IOException {
 		   BufferedReader br = new BufferedReader(new FileReader(filename+".dxf"));
@@ -673,7 +670,7 @@ public class Architecture {
 
 		System.out.println("PC: " + PC.getData() + " | IR: " + IR.getData() + " ("+instruction+") | SP: " + SP.getData());
 		System.out.print("REGISTERS: ");
-		for (Register r : registerLookup) {
+		for (Register r : registerList) {
 			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
 		}
 		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
@@ -686,7 +683,7 @@ public class Architecture {
 		System.out.println("External Bus: " + extBus.get());
 		System.out.println("PC: " + PC.getData() + " | SP: " + SP.getData());
 		System.out.print("REGISTERS: ");
-		for (Register r : registerLookup) {
+		for (Register r : registerList) {
 			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
 		}
 		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));

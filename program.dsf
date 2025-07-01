@@ -4,7 +4,7 @@
 	c
 	d
 
-	move 10 %reg0 ; comment! :)
+	move 10 %reg0
 	move 15 %reg1
 	add %reg0 %reg1
 	; at this point, %reg1=15

@@ -16,7 +16,6 @@ public class Assembler {
 	private ArrayList<String> lines;
 	private ArrayList<String> objProgram;
 	private ArrayList<String> execProgram;
-	private ArrayList<String> commands;
 	private ArrayList<String> labels;
 	private ArrayList<Integer> labelsAdresses;
 	private ArrayList<String> variables;
@@ -30,7 +29,6 @@ public class Assembler {
 		objProgram = new ArrayList<>();
 		execProgram = new ArrayList<>();
 		arch = new Architecture();
-		commands = arch.getCommandsList();
 	}
 
 	public ArrayList<String> getObjProgram() {
@@ -281,7 +279,7 @@ public class Assembler {
 	 */
 	private int searchRegisterId(String line) {
 		int i = 0;
-		for (Register r : arch.getRegistersList()) {
+		for (Register r : arch.registerList) {
 			if (line.equals(r.getRegisterName()))
 				return i;
 			i++;
