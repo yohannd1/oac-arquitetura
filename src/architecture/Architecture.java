@@ -83,17 +83,17 @@ public class Architecture {
 		registerList[demux.getValue()].read();
 	}
 
-	private void registersInternalRead() {
-		registerList[demux.getValue()].internalRead();
-	}
-
 	private void registersStore() {
 		registerList[demux.getValue()].store();
 	}
 
-	private void registersInternalStore() {
-		registerList[demux.getValue()].internalStore();
-	}
+	// private void registersInternalRead() {
+	// 	registerList[demux.getValue()].internalRead();
+	// }
+
+	// private void registersInternalStore() {
+	// 	registerList[demux.getValue()].internalStore();
+	// }
 
 	private void add_rr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
@@ -547,28 +547,27 @@ public class Architecture {
 	}
 
 	public void readExec(String filename) throws IOException {
-		   BufferedReader br = new BufferedReader(new FileReader(filename+".dxf"));
-		   String linha;
-		   int i=0;
-		   while ((linha = br.readLine()) != null) {
-			     intBus.put(i);
-			     extBus.put(intBus.get());
-			     memory.store();
-			   	 intBus.put(Integer.parseInt(linha));
-			     extBus.put(intBus.get());
-			     memory.store();
-			     i++;
-			}
-			br.close();
+		BufferedReader br = new BufferedReader(new FileReader(filename + ".dxf"));
+		String linha;
+		int i = 0;
+		while ((linha = br.readLine()) != null) {
+			intBus.put(i);
+			extBus.put(intBus.get());
+			memory.store();
+			intBus.put(Integer.parseInt(linha));
+			extBus.put(intBus.get());
+			memory.store();
+			i++;
+		}
+		br.close();
 	}
 
 	public void controlUnitEexec() {
 		halt = false;
 		while (!halt) {
 			fetch();
-			if (!halt) {
+			if (!halt)
 				decodeExecute();
-			}
 		}
 		System.out.println("--- EXECUTION HALTED ---");
 	}

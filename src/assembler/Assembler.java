@@ -148,12 +148,14 @@ public class Assembler {
 	 * @param filename
 	 * @throws IOException
 	 */
-	public void makeExecutable(String filename) throws IOException {
+	public void makeExecutable(String filename) throws IOException, AssemblerException {
 		if (!checkProperDeclaration())
 			return;
 
-		// allocate memory space to store program and variables
-		execProgram = (ArrayList<String>) objProgram.clone();
+		// allocate memory space to store program and variables, and copy the object program
+		execProgram = new ArrayList<>();
+		for (String s : objProgram)
+			execProgram.add(s);
 
 		replaceAllVariables();
 		replaceLabels();
@@ -167,16 +169,19 @@ public class Assembler {
 	 * Replace all the register names in the executable program with its
 	 * corresponding IDs.
 	 */
-	protected void replaceRegisters() {
-		int p = 0;
+	protected void replaceRegisters() throws AssemblerException {
+		int pos = 0;
 		for (String line : execProgram) {
 			// A % on the start of the line indicates a register name
 			if (line.startsWith("%")) {
-				int regId = searchRegisterId(line.substring(1, line.length()));
-				String newLine = Integer.toString(regId);
-				execProgram.set(p, newLine);
+				String regQuery = line.substring(1, line.length());
+				int regId = searchRegisterId(regQuery);
+				if (regId == -1)
+					throw new AssemblerException("Unknown register: " + line);
+				else
+					execProgram.set(pos, Integer.toString(regId));
 			}
-			p++;
+			pos++;
 		}
 	}
 
@@ -205,7 +210,7 @@ public class Assembler {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		for (String l : execProgram)
 			writer.write(l + "\n");
-		writer.write("-1"); //-1 is a flag indicating that the program is finished
+		writer.write("-1"); // -1 is a flag indicating that the program is finished
 		writer.close();
 	}
 
@@ -231,18 +236,15 @@ public class Assembler {
 	}
 
 	/**
-	 * Replace all ocurrences of a variable name found in the program by its
-	 * address in the executable program.
-	 *
-	 * @param var
-	 * @param position
+	 * Replace all ocurrences of a variable name found in the executable
+	 * program by its address.
 	 */
-	protected void replaceVariable(String var, int position) {
-		var = "&" + var;
+	protected void replaceVariable(String varName, int address) {
+		String match = "&" + varName;
 		int i = 0;
 		for (String s : execProgram) {
-			if (s.equals(var))
-				execProgram.set(i, Integer.toString(position));
+			if (s.equals(match))
+				execProgram.set(i, Integer.toString(address));
 			i++;
 		}
 	}
@@ -277,40 +279,14 @@ public class Assembler {
 	 *
 	 * @return register id (>= 0) on success, -1 on failure
 	 */
-	private int searchRegisterId(String line) {
+	private int searchRegisterId(String regQuery) {
 		int i = 0;
 		for (Register r : arch.registerList) {
-			if (line.equals(r.getRegisterName()))
+			String regName = r.getRegisterName().toLowerCase();
+			if (regQuery.toLowerCase().equals(regName))
 				return i;
 			i++;
 		}
 		return -1;
-	}
-
-	public static void main(String[] args) throws IOException {
-		if (args.length != 1) {
-			System.err.println("Usage: assembler <INPUT>");
-			System.err.println("INPUT must be the name of a .dsf file, without the extension");
-			System.exit(2);
-		}
-
-		String filename = args[0];
-
-		Assembler assembler = new Assembler();
-
-		try {
-			System.err.printf("Reading source assembler file: %s.dsf\n", filename);
-			assembler.read(filename);
-
-			System.err.println("Generating the object program");
-			assembler.parseAll();
-
-			System.err.printf("Generating executable: %s.dxf\n", filename);
-			assembler.makeExecutable(filename);
-
-			System.err.println("Assembling finished!");
-		} catch (ParseException ex) {
-			System.err.println("Error while parsing: " + ex);
-		}
 	}
 }

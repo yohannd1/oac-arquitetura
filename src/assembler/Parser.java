@@ -57,84 +57,78 @@ public class Parser {
 		if (commandName.equals("add") && paramCount == 2) {
 			String arg0 = tokens[1];
 			String arg1 = tokens[2];
-			String[] args = new String[] { arg0, arg1 };
 
 			if (isRegName(arg0) && isRegName(arg1))
-				return new Command(CommandID.ADD_REG_REG, args);
+				return new Command(CommandID.ADD_REG_REG, new String[] { arg0, arg1 });
 			else if (isMemName(arg0) && isRegName(arg1))
-				return new Command(CommandID.ADD_MEM_REG, args);
+				return new Command(CommandID.ADD_MEM_REG, new String[] { "&" + arg0, arg1 });
 			else if (isRegName(arg0) && isMemName(arg1))
-				return new Command(CommandID.ADD_REG_MEM, args);
+				return new Command(CommandID.ADD_REG_MEM, new String[] { arg0, "&" + arg1 });
 			else
 				return null;
 		} else if (commandName.equals("sub") && paramCount == 2) {
 			String arg0 = tokens[1];
 			String arg1 = tokens[2];
-			String[] args = new String[] { arg0, arg1 };
 
 			if (isRegName(arg0) && isRegName(arg1))
-				return new Command(CommandID.SUB_REG_REG, args);
+				return new Command(CommandID.SUB_REG_REG, new String[] { arg0, arg1 });
 			else if (isMemName(arg0) && isRegName(arg1))
-				return new Command(CommandID.SUB_MEM_REG, args);
+				return new Command(CommandID.SUB_MEM_REG, new String[] { "&" + arg0, arg1 });
 			else if (isRegName(arg0) && isMemName(arg1))
-				return new Command(CommandID.SUB_REG_MEM, args);
+				return new Command(CommandID.SUB_REG_MEM, new String[] { arg0, "&" + arg1 });
 			else
 				return null;
 		} else if (commandName.equals("move") && paramCount == 2) {
 			String arg0 = tokens[1];
 			String arg1 = tokens[2];
-			String[] args = new String[] { arg0, arg1 };
 
 			if (isMemName(arg0) && isRegName(arg1))
-				return new Command(CommandID.MOVE_MEM_REG, args);
+				return new Command(CommandID.MOVE_MEM_REG, new String[] { "&" + arg0, arg1 });
 			else if (isRegName(arg0) && isMemName(arg1))
-				return new Command(CommandID.MOVE_REG_MEM, args);
+				return new Command(CommandID.MOVE_REG_MEM, new String[] { arg0, "&" + arg1 });
 			else if (isRegName(arg0) && isRegName(arg1))
-				return new Command(CommandID.MOVE_REG_REG, args);
+				return new Command(CommandID.MOVE_REG_REG, new String[] { arg0, arg1 });
 			else if (isNumber(arg0) && isRegName(arg1))
-				return new Command(CommandID.MOVE_IMM_REG, args);
+				return new Command(CommandID.MOVE_IMM_REG, new String[] { arg0, arg1 });
 			else
 				return null;
 		} else if (commandName.equals("inc") && paramCount == 1) {
 			String arg = tokens[1];
-			String[] args = new String[] { arg };
 
 			if (isRegName(arg))
-				return new Command(CommandID.INC_REG, args);
+				return new Command(CommandID.INC_REG, new String[] { arg });
 			else if (isMemName(arg))
-				return new Command(CommandID.INC_MEM, args);
+				return new Command(CommandID.INC_MEM, new String[] { "&" + arg });
 			else
 				return null;
 		} else if (commandName.equals("jmp") && paramCount == 1) {
 			String arg = tokens[1];
-			return isMemName(arg) ? new Command(CommandID.JMP, new String[] { arg }) : null;
+			return isMemName(arg) ? new Command(CommandID.JMP, new String[] { "&" + arg }) : null;
 		} else if (commandName.equals("jn") && paramCount == 1) {
 			String arg = tokens[1];
-			return isMemName(arg) ? new Command(CommandID.JN, new String[] { arg }) : null;
+			return isMemName(arg) ? new Command(CommandID.JN, new String[] { "&" + arg }) : null;
 		} else if (commandName.equals("jz") && paramCount == 1) {
 			String arg = tokens[1];
-			return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
+			return isMemName(arg) ? new Command(CommandID.JZ, new String[] { "&" + arg }) : null;
 		} else if (commandName.equals("jnz") && paramCount == 1) {
 			String arg = tokens[1];
-			return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
+			return isMemName(arg) ? new Command(CommandID.JZ, new String[] { "&" + arg }) : null;
 		} else if (commandName.equals("jeq") && paramCount == 3) {
-			String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
 			return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-				? new Command(CommandID.JEQ, args)
+				? new Command(CommandID.JEQ, new String[] { tokens[1], tokens[2], "&" + tokens[3] })
 				: null;
 		} else if (commandName.equals("jgt") && paramCount == 3) {
-			String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
 			return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-				? new Command(CommandID.JGT, args)
+				? new Command(CommandID.JGT, new String[] { tokens[1], tokens[2], "&" + tokens[3] })
 				: null;
 		} else if (commandName.equals("jlw") && paramCount == 3) {
-			String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
 			return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-				? new Command(CommandID.JLW, args)
+				? new Command(CommandID.JLW, new String[] { tokens[1], tokens[2], "&" + tokens[3] })
 				: null;
 		} else if (commandName.equals("call") && paramCount == 1) {
-			String[] args = new String[] { tokens[1] };
-			return (isMemName(tokens[1])) ? new Command(CommandID.CALL, args) : null;
+			return (isMemName(tokens[1]))
+				? new Command(CommandID.CALL, new String[] { "&" + tokens[1] })
+				: null;
 		} else if (commandName.equals("ret") && paramCount == 0) {
 			return new Command(CommandID.RET, new String[] {});
 		} else {
