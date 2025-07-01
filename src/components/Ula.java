@@ -1,33 +1,37 @@
 package components;
 
 public class Ula {
+	private Bus ulaBus; // bus internal to the ULA
+	private Bus extBus;
 	private Bus intBus;
-	private Bus extBus1;
-	private Bus extBus2;
 	private Register reg1;
 	private Register reg2;
 
-	public Ula(Bus extBus1, Bus extBus2) {
+	public Ula(Bus extBus, Bus intBus) {
 		super();
-		this.extBus1 = extBus1;
-		this.extBus2 = extBus2;
-		intBus = new Bus();
-		reg1 = new Register("UlaReg0", extBus1, intBus);
-		reg2 = new Register("UlaReg1", extBus1, intBus);
+		this.extBus = extBus;
+		this.intBus = intBus;
+		ulaBus = new Bus();
+		reg1 = new Register("UlaReg0", extBus, ulaBus);
+		reg2 = new Register("UlaReg1", extBus, ulaBus);
+	}
+
+	public int debugGet(int reg) {
+		return getRegister(reg).getData();
 	}
 
 	/**
 	 * This method adds the reg1 and reg2 values, storing the result in reg2.
 	 */
 	public void add() {
-		int res=0;
-		intBus.put(0);
-		reg1.internalRead(); //puts its data into the internal bus
-		res = intBus.get(); //stored for operation
-		reg2.internalRead(); //puts the internal data into the internal bus
-		res += intBus.get(); //the operation was performed
-		intBus.put(res);
-		reg2.internalStore(); //saves the result into internal store
+		int res = 0;
+		ulaBus.put(0);
+		reg1.internalRead(); // puts its data into the internal bus
+		res = ulaBus.get(); // stored for operation
+		reg2.internalRead(); // puts the internal data into the internal bus
+		res += ulaBus.get(); // the operation was performed
+		ulaBus.put(res);
+		reg2.internalStore(); // saves the result into internal store
 	}
 
 	/**
@@ -35,71 +39,59 @@ public class Ula {
 	 * This processing uses a Ula's internal bus
 	 */
 	public void sub() {
-		int res=0;
-		intBus.put(0);
+		int res = 0;
+		ulaBus.put(0);
 		reg1.internalRead(); //puts its data into the internal bus
-		res = intBus.get(); //stored for operation
+		res = ulaBus.get(); //stored for operation
 		reg2.internalRead(); //puts the internal data into the internal bus
-		res -= intBus.get(); //the operation was performed
-		intBus.put(res);
+		res -= ulaBus.get(); //the operation was performed
+		ulaBus.put(res);
 		reg2.internalStore(); //saves the result into internal store
 	}
 
 	/**
-	 * This method increments by 1 the value stored into reg2
+	 * Increment the value in ula(1), inplace.
 	 */
 	public void inc() {
 		reg2.internalRead();
-		int res = intBus.get();
-		res++;
-		intBus.put(res);
+		int result = ulaBus.get() + 1;
+		ulaBus.put(result);
 		reg2.internalStore();
 	}
 
 	/**
-	 * This method stores the value found in the external bus into the #reg
-	 * @param reg
+	 * Store the value in the external bus into an ULA register.
 	 */
 	public void store(int reg) {
-		if (reg==0)
-			reg1.store();
-		else
-			reg2.store();
+		getRegister(reg).store(); // extBus->regXX
 	}
 
 	/**
-	 * This method reads the value from #reg stores it into the external bus
-	 * @param reg
+	 * Read a value from an ULA register and store it into the external bus.
 	 */
-	public void read (int reg) {
-		if (reg==0)
-			reg1.read();
-		else
-			reg2.read();
+	public void read(int reg) {
+		getRegister(reg).read(); // regXX->extBus
+	}
+
+	private Register getRegister(int reg) {
+		if (reg == 0) return reg1;
+		else return reg2;
 	}
 
 	/**
-	 * This method stores the value found in the internal bus into the #reg
-	 * @param reg
+	 * Store the value in the internal bus into a specific register.
 	 */
 	public void internalStore(int reg) {
-		extBus1.put(extBus2.get()); // moving the data from a bus to another
-		// inserting the data in the correct register
-		if (reg==0)
-			reg1.store();
-		else
-			reg2.store();
+		System.out.printf("$1 %d\n", intBus.get());
+		ulaBus.put(intBus.get()); // ulaBus<-intBus
+		getRegister(reg).internalStore(); // regXX<-ulaBus
 	}
 
 	/**
-	 * This method reads the value from #reg stores it into the internal bus
-	 * @param reg
+	 * Read the value from a register into the internal bus.
 	 */
 	public void internalRead(int reg) {
-		if (reg==0)
-			reg1.read();
-		else
-			reg2.read();
-		extBus2.put(extBus1.get()); // moving the data from a bus to another
+		getRegister(reg).internalRead(); // regXX->ulaBus
+		intBus.put(ulaBus.get()); // ulaBus->intBus
 	}
 }

@@ -57,7 +57,7 @@ public class Architecture {
 
 		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP };
 
-		ula = new Ula(intBus, intBus);
+		ula = new Ula(extBus, intBus);
 
 		demux = new Demux();
 	}
@@ -79,21 +79,20 @@ public class Architecture {
 		if (result < 0) Flags.setBit(1, 1);
 	}
 
-	private void registersRead() {
-		registerList[demux.getValue()].read();
+	/**
+	 * Select a register from the demux.
+	 */
+	private Register selectRegister() {
+		return registerList[demux.getValue()];
 	}
 
-	private void registersStore() {
-		registerList[demux.getValue()].store();
+	private void demuxRegisterRead() {
+		selectRegister().read();
 	}
 
-	// private void registersInternalRead() {
-	// 	registerList[demux.getValue()].internalRead();
-	// }
-
-	// private void registersInternalStore() {
-	// 	registerList[demux.getValue()].internalStore();
-	// }
+	private void demuxRegisterStore() {
+		selectRegister().store();
+	}
 
 	private void add_rr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
@@ -105,11 +104,11 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		demux.setValue(regB_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.add();
@@ -117,7 +116,7 @@ public class Architecture {
 		setStatusFlags(intBus.get());
 
 		demux.setValue(regB_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void add_mr() {
@@ -137,7 +136,7 @@ public class Architecture {
 		ula.store(0);
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.add();
@@ -145,7 +144,7 @@ public class Architecture {
 		setStatusFlags(intBus.get());
 
 		demux.setValue(regA_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void add_rm() {
@@ -158,7 +157,7 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		intBus.put(mem_addr);
@@ -191,11 +190,11 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		demux.setValue(regB_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.sub();
@@ -203,7 +202,7 @@ public class Architecture {
 		setStatusFlags(intBus.get());
 
 		demux.setValue(regB_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void sub_mr() {
@@ -223,7 +222,7 @@ public class Architecture {
 		ula.store(0);
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.sub();
@@ -231,7 +230,7 @@ public class Architecture {
 		setStatusFlags(intBus.get());
 
 		demux.setValue(regA_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void sub_rm() {
@@ -244,7 +243,7 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		intBus.put(mem_addr);
@@ -283,7 +282,7 @@ public class Architecture {
 		intBus.put(extBus.get());
 
 		demux.setValue(regA_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void move_rm() {
@@ -300,7 +299,7 @@ public class Architecture {
 		memory.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		extBus.put(intBus.get());
 		memory.store();
 	}
@@ -315,24 +314,51 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 
 		demux.setValue(regB_id);
-		registersStore();
+		demuxRegisterStore();
+	}
+
+	/**
+	 * Sub-microprogram for pc++
+	 */
+	private void submicr_pcInc() {
+        PC.internalRead(); // pc->intBus
+		System.out.printf("a: PC=%d\n", PC.getData());
+		ula.internalStore(1); // ula(1)<-intBus
+		System.out.printf("b: %d\n", ula.debugGet(1));
+		ula.inc(); // ula(1)++
+		System.out.printf("c: %d\n", ula.debugGet(1));
+		ula.internalRead(1); // ula(1)->intBus
+		PC.internalStore(); // pc<-intBus
 	}
 
 	private void move_ir() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int immediate = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		submicr_pcInc(); // pc++
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// read immediate value
+        PC.read(); // pc->intBus
+		extBus.put(intBus.get()); // intBus->extBus
+		memory.read(); // mem(r)<-extBus, extBus<-mem[pc]
+		intBus.put(extBus.get()); // extBus->intBus
+		IR.store();
 
-		intBus.put(immediate);
-		demux.setValue(regA_id);
-		registersStore();
+		submicr_pcInc(); // pc++
+
+		// read register ID
+        PC.read(); // pc->intBus
+		extBus.put(intBus.get()); // intBus->extBus
+		memory.read(); // mem(r)<-extBus, extBus<-mem[pc]
+		intBus.put(extBus.get()); // extBus->intBus
+
+		demux.setValue(intBus.get()); // TODO: make it read from the bus directly lol
+
+		// store immediate value into the register
+		IR.read(); // ir->intBus (ir is storing the immediate value)
+		demuxRegisterStore(); // regXX<-intBus
+
+		submicr_pcInc(); // pc++
 	}
 
 	private void inc_r() {
@@ -341,14 +367,14 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 		ula.inc();
 		ula.read(0);
 		setStatusFlags(intBus.get());
 
 		demux.setValue(regA_id);
-		registersStore();
+		demuxRegisterStore();
 	}
 
 	private void inc_m() {
@@ -429,11 +455,11 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		demux.setValue(regB_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.sub();
@@ -459,11 +485,11 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		demux.setValue(regB_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.sub();
@@ -489,11 +515,11 @@ public class Architecture {
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
 		demux.setValue(regA_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(0);
 
 		demux.setValue(regB_id);
-		registersRead();
+		demuxRegisterRead();
 		ula.store(1);
 
 		ula.sub();
@@ -564,10 +590,17 @@ public class Architecture {
 
 	public void controlUnitEexec() {
 		halt = false;
-		while (!halt) {
+
+		// if (simulation) {
+		// 	System.out.println("MEMORY BEFORE PROGRAM BEGINS");
+		// 	memory.debugPrint();
+		// }
+
+		while (true) {
+			if (halt) break;
 			fetch();
-			if (!halt)
-				decodeExecute();
+			if (halt) break;
+			decodeExecute();
 		}
 		System.out.println("--- EXECUTION HALTED ---");
 	}
@@ -576,7 +609,10 @@ public class Architecture {
 		IR.read();
 		int command = intBus.get();
 
-		if (simulation) simulationDecodeExecuteBefore(command);
+		if (simulation) {
+			System.out.println("*** BEFORE Decode & Execute ***");
+			simulationPrintAllRegisters();
+		}
 
 		switch (command) {
 			case 0: add_rr(); break;
@@ -605,27 +641,40 @@ public class Architecture {
 				break;
 		}
 
-		if (simulation) simulationDecodeExecuteAfter();
+		if (simulation) {
+			System.out.println("*** AFTER Decode & Execute ***");
+			System.out.println("Internal Bus: " + intBus.get());
+			System.out.println("External Bus: " + extBus.get());
+			simulationPrintAllRegisters();
+			waitForEnter();
+		}
 	}
 
 	private void fetch() {
-		PC.read();
-		if (PC.getData() >= memorySize) {
-			halt = true; return;
-		}
-		extBus.put(intBus.get());
-		memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		IR.store();
+		if (simulation)
+			System.out.printf("[Fetch begin] PC = %d\n", PC.getData());
 
+		// halt if PC is invalid
+		if (PC.getData() >= memorySize) {
+			halt = true;
+			return;
+		}
+
+		PC.read(); // pc->intBus
+		extBus.put(intBus.get()); // intBus->extBus (FIXME: acho que não pode fazer isso)
+		memory.read(); // mem(r)<-extBus, mem->extBus
+		intBus.put(extBus.get()); // intBus<-extBus (FIXME: acho que não pode fazer isso)
+		IR.store(); // ir<-intBus
+
+		// pc++
 		PC.read();
 		ula.store(0);
 		ula.inc();
 		ula.read(0);
 		PC.store();
 
-		if (simulation) simulationFetch();
+		if (simulation)
+			simulationFetch();
 	}
 
 	private boolean hasOperands(String instruction) {
@@ -635,10 +684,13 @@ public class Architecture {
 			return true;
 	}
 
-	private void simulationDecodeExecuteBefore(int command) {
+	private void simulationDecodeExecuteBefore() {
 		System.out.println("----------BEFORE Decode and Execute phases--------------");
+		simulationPrintAllRegisters();
+	}
 
-		CommandID commandId = CommandID.fromInt(command);
+	private void simulationPrintAllRegisters() {
+		CommandID commandId = CommandID.fromInt(IR.getData());
 		String instName = (commandId == null) ? "invalid" : commandId.toString();
 
 		System.out.printf("PC: %d | IR: %d (%s) | SP: %d\n", PC.getData(), IR.getData(), instName, SP.getData());
@@ -648,17 +700,7 @@ public class Architecture {
 		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
 	}
 
-	private void simulationDecodeExecuteAfter() {
-		System.out.println("-----------AFTER Decode and Execute phases--------------");
-		System.out.println("Internal Bus: " + intBus.get());
-		System.out.println("External Bus: " + extBus.get());
-
-		System.out.printf("PC: %d | SP: %d\n", PC.getData(), SP.getData());
-		System.out.print("REGISTERS: ");
-		for (Register r : registerList)
-			System.out.printf("%s: %d | ", r.getRegisterName(), r.getData());
-		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
-
+	private void waitForEnter() {
 		Scanner input = new Scanner(System.in);
 		System.out.println("Press <Enter> to continue...");
 		input.nextLine();
@@ -667,19 +709,12 @@ public class Architecture {
 	private void simulationFetch() {
 		if (simulation) {
 			System.out.println("------------------------------------------------------");
-			System.out.println("-------Fetch Phase------");
-			System.out.println("PC was pointing to: " + (PC.getData() -1) );
-			System.out.println("IR loaded with opcode: " + IR.getData());
+			System.out.println("-------After fetch phase------");
+			System.out.printf("PC = %d | IR = %d\n", PC.getData(), IR.getData());
 		}
 	}
 
 	public int getMemorySize() {
 		return memorySize;
-	}
-
-	public static void main(String[] args) throws IOException {
-		Architecture arch = new Architecture(true);
-		arch.readExec("program");
-		arch.controlUnitEexec();
 	}
 }

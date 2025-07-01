@@ -20,14 +20,16 @@ public class Register {
 	}
 
 	/**
-	 * Get the register's value. Should not be used in microprograms.
+	 * Get the register's value. Should not be used in
+	 * microprograms.
 	 */
 	public int getData() {
 		return data;
 	}
 
 	/**
-	 * Constructor for the Flags register (dedicated bits for specific flags).
+	 * Constructor for the Flags register (dedicated bits for
+	 * specific flags).
 	 */
 	public Register(String name, int numberOfBits, Bus bus) {
 		super();
@@ -45,7 +47,8 @@ public class Register {
 	}
 
 	/**
-	 * This method allows the UC or the ULA to access any special bit
+	 * This method allows the UC or the ULA to access any special
+	 * bit
 	 * @param pos
 	 */
 	public int getBit(int pos) {

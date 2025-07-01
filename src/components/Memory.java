@@ -58,9 +58,15 @@ public class Memory {
 	}
 
 	/**
-	 * Special method used in statusm memory to store the data in the position 1
+	 * Special method used in status memory to store the data in the position 1
 	 */
 	public void storeIn1() {
 		this.dataList[1] = bus.get();
+	}
+
+	public void debugPrint() {
+		for (int x : dataList)
+			System.out.printf("%d ", x);
+		System.out.println();
 	}
 }
