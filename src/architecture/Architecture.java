@@ -325,11 +325,8 @@ public class Architecture {
 	 */
 	private void submicr_pcInc() {
         PC.internalRead(); // pc->intBus
-		System.out.printf("a: PC=%d\n", PC.getData());
 		ula.internalStore(1); // ula(1)<-intBus
-		System.out.printf("b: %d\n", ula.debugGet(1));
 		ula.inc(); // ula(1)++
-		System.out.printf("c: %d\n", ula.debugGet(1));
 		ula.internalRead(1); // ula(1)->intBus
 		PC.internalStore(); // pc<-intBus
 	}

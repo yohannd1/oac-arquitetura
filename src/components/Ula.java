@@ -1,19 +1,21 @@
 package components;
 
 public class Ula {
-	private Bus ulaBus; // bus internal to the ULA
+	private Bus ulaBus; // internal to the ULA
 	private Bus extBus;
 	private Bus intBus;
+	private Register reg0;
 	private Register reg1;
-	private Register reg2;
 
 	public Ula(Bus extBus, Bus intBus) {
 		super();
+
 		this.extBus = extBus;
 		this.intBus = intBus;
 		ulaBus = new Bus();
-		reg1 = new Register("UlaReg0", extBus, ulaBus);
-		reg2 = new Register("UlaReg1", extBus, ulaBus);
+
+		reg0 = new Register("Ula.Reg0", extBus, ulaBus);
+		reg1 = new Register("Ula.Reg1", extBus, ulaBus);
 	}
 
 	public int debugGet(int reg) {
@@ -21,42 +23,42 @@ public class Ula {
 	}
 
 	/**
-	 * This method adds the reg1 and reg2 values, storing the result in reg2.
+	 * This method adds the reg0 and reg1 values, storing the result in reg1.
 	 */
 	public void add() {
 		int res = 0;
 		ulaBus.put(0);
-		reg1.internalRead(); // puts its data into the internal bus
+		reg0.internalRead(); // puts its data into the internal bus
 		res = ulaBus.get(); // stored for operation
-		reg2.internalRead(); // puts the internal data into the internal bus
+		reg1.internalRead(); // puts the internal data into the internal bus
 		res += ulaBus.get(); // the operation was performed
 		ulaBus.put(res);
-		reg2.internalStore(); // saves the result into internal store
+		reg1.internalStore(); // saves the result into internal store
 	}
 
 	/**
-	 * This method sub the reg2 value from reg1 value, storing the result in reg2
+	 * This method sub the reg1 value from reg0 value, storing the result in reg1
 	 * This processing uses a Ula's internal bus
 	 */
 	public void sub() {
 		int res = 0;
 		ulaBus.put(0);
-		reg1.internalRead(); //puts its data into the internal bus
+		reg0.internalRead(); //puts its data into the internal bus
 		res = ulaBus.get(); //stored for operation
-		reg2.internalRead(); //puts the internal data into the internal bus
+		reg1.internalRead(); //puts the internal data into the internal bus
 		res -= ulaBus.get(); //the operation was performed
 		ulaBus.put(res);
-		reg2.internalStore(); //saves the result into internal store
+		reg1.internalStore(); //saves the result into internal store
 	}
 
 	/**
 	 * Increment the value in ula(1), inplace.
 	 */
 	public void inc() {
-		reg2.internalRead();
+		reg1.internalRead();
 		int result = ulaBus.get() + 1;
 		ulaBus.put(result);
-		reg2.internalStore();
+		reg1.internalStore();
 	}
 
 	/**
@@ -74,15 +76,14 @@ public class Ula {
 	}
 
 	private Register getRegister(int reg) {
-		if (reg == 0) return reg1;
-		else return reg2;
+		if (reg == 0) return reg0;
+		else return reg1;
 	}
 
 	/**
 	 * Store the value in the internal bus into a specific register.
 	 */
 	public void internalStore(int reg) {
-		System.out.printf("$1 %d\n", intBus.get());
 		ulaBus.put(intBus.get()); // ulaBus<-intBus
 		getRegister(reg).internalStore(); // regXX<-ulaBus
 	}

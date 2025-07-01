@@ -22,7 +22,7 @@ public class SingleBusRegister {
 	 * Set the register's value. Should not be used in
 	 * microprograms.
 	 */
-	public int setData(int x) {
+	public void setData(int x) {
 		data = x;
 	}
 
