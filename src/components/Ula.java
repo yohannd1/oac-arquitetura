@@ -1,14 +1,12 @@
 package components;
 
 public class Ula {
-	
 	private Bus intBus;
 	private Bus extBus1;
 	private Bus extBus2;
 	private Register reg1;
 	private Register reg2;
-	
-	
+
 	public Ula(Bus extBus1, Bus extBus2) {
 		super();
 		this.extBus1 = extBus1;
@@ -31,13 +29,12 @@ public class Ula {
 		intBus.put(res);
 		reg2.internalStore(); //saves the result into internal store
 	}
-	
+
 	/**
 	 * This method sub the reg2 value from reg1 value, storing the result in reg2
 	 * This processing uses a Ula's internal bus
 	 */
 	public void sub() {
-				
 		int res=0;
 		intBus.put(0);
 		reg1.internalRead(); //puts its data into the internal bus
@@ -46,22 +43,19 @@ public class Ula {
 		res -= intBus.get(); //the operation was performed
 		intBus.put(res);
 		reg2.internalStore(); //saves the result into internal store
-		
 	}
-	
+
 	/**
 	 * This method increments by 1 the value stored into reg2
 	 */
 	public void inc() {
-		
 		reg2.internalRead();
 		int res = intBus.get();
-		res ++;
+		res++;
 		intBus.put(res);
 		reg2.internalStore();
-		
 	}
-	
+
 	/**
 	 * This method stores the value found in the external bus into the #reg
 	 * @param reg
@@ -72,7 +66,7 @@ public class Ula {
 		else
 			reg2.store();
 	}
-	
+
 	/**
 	 * This method reads the value from #reg stores it into the external bus
 	 * @param reg
@@ -83,31 +77,29 @@ public class Ula {
 		else
 			reg2.read();
 	}
-	
+
 	/**
 	 * This method stores the value found in the internal bus into the #reg
 	 * @param reg
 	 */
 	public void internalStore(int reg) {
-		extBus1.put(extBus2.get()); //moving the data from a bus to another
-		//inserting the data in the correct register
+		extBus1.put(extBus2.get()); // moving the data from a bus to another
+		// inserting the data in the correct register
 		if (reg==0)
 			reg1.store();
 		else
 			reg2.store();
 	}
-	
+
 	/**
 	 * This method reads the value from #reg stores it into the internal bus
 	 * @param reg
 	 */
-	public void internalRead (int reg) {
+	public void internalRead(int reg) {
 		if (reg==0)
 			reg1.read();
 		else
 			reg2.read();
-		extBus2.put(extBus1.get()); //moving the data from a bus to another
+		extBus2.put(extBus1.get()); // moving the data from a bus to another
 	}
-	
-	
 }

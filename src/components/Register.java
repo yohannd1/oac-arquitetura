@@ -11,8 +11,7 @@ public class Register {
 	private Bus busExt, busInt;
 
 	/**
-	 * Default constructor
-	 * @param busExt
+	 * Default constructor.
 	 */
 	public Register(String name, Bus extBus, Bus intBus) {
 		this.registerName = name;
@@ -20,15 +19,15 @@ public class Register {
 		this.busInt = intBus;
 	}
 
+	/**
+	 * Get the register's value. Should not be used in microprograms.
+	 */
 	public int getData() {
 		return data;
 	}
 
 	/**
-	 * This special constructor is used to make Flags register
-	 * with special bits for special informations
-	 * @param numberOfBits
-	 * @param bus
+	 * Constructor for the Flags register (dedicated bits for specific flags).
 	 */
 	public Register(String name, int numberOfBits, Bus bus) {
 		super();

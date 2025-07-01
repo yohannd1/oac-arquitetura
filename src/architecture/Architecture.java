@@ -13,7 +13,6 @@ import components.Register;
 import components.Ula;
 
 public class Architecture {
-
 	private boolean simulation;
 	private boolean halt;
 
@@ -37,7 +36,6 @@ public class Architecture {
 
 	private Ula ula;
 	private Demux demux;
-	private ArrayList<String> commandsList;
 
 	private void componentsInstances() {
 		intBus = new Bus();
@@ -62,7 +60,6 @@ public class Architecture {
 		ula = new Ula(intBus, intBus);
 
 		demux = new Demux();
-		fillCommandsList();
 	}
 
 	public Architecture() {
@@ -73,31 +70,6 @@ public class Architecture {
 	public Architecture(boolean sim) {
 		componentsInstances();
 		simulation = sim;
-	}
-
-	protected void fillCommandsList() {
-		commandsList = new ArrayList<String>();
-		commandsList.add("add_rr");    // 0
-		commandsList.add("add_mr");    // 1
-		commandsList.add("add_rm");    // 2
-		commandsList.add("sub_rr");    // 3
-		commandsList.add("sub_mr");    // 4
-		commandsList.add("sub_rm");    // 5
-		commandsList.add("move_mr");   // 6
-		commandsList.add("move_rm");   // 7
-		commandsList.add("move_rr");   // 8
-		commandsList.add("move_ir");   // 9
-		commandsList.add("inc_r");     // 10
-		commandsList.add("inc_m");     // 11
-		commandsList.add("jmp");       // 12
-		commandsList.add("jn");        // 13
-		commandsList.add("jz");        // 14
-		commandsList.add("jnz");       // 15
-		commandsList.add("jeq");       // 16
-		commandsList.add("jgt");       // 17
-		commandsList.add("jlw");       // 18
-		commandsList.add("call");      // 19
-		commandsList.add("ret");       // 20
 	}
 
 	private void setStatusFlags(int result) {
@@ -666,31 +638,31 @@ public class Architecture {
 
 	private void simulationDecodeExecuteBefore(int command) {
 		System.out.println("----------BEFORE Decode and Execute phases--------------");
-		String instruction = (command >= 0 && command < commandsList.size()) ? commandsList.get(command) : "HALT";
 
-		System.out.println("PC: " + PC.getData() + " | IR: " + IR.getData() + " ("+instruction+") | SP: " + SP.getData());
+		CommandID commandId = CommandID.fromInt(command);
+		String instName = (commandId == null) ? "invalid" : commandId.toString();
+
+		System.out.printf("PC: %d | IR: %d (%s) | SP: %d\n", PC.getData(), IR.getData(), instName, SP.getData());
 		System.out.print("REGISTERS: ");
-		for (Register r : registerList) {
-			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
-		}
+		for (Register r : registerList)
+			System.out.printf("%s: %d | ", r.getRegisterName(), r.getData());
 		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
-		System.out.println("Instruction: "+instruction);
 	}
 
 	private void simulationDecodeExecuteAfter() {
 		System.out.println("-----------AFTER Decode and Execute phases--------------");
 		System.out.println("Internal Bus: " + intBus.get());
 		System.out.println("External Bus: " + extBus.get());
-		System.out.println("PC: " + PC.getData() + " | SP: " + SP.getData());
+
+		System.out.printf("PC: %d | SP: %d\n", PC.getData(), SP.getData());
 		System.out.print("REGISTERS: ");
-		for (Register r : registerList) {
-			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
-		}
+		for (Register r : registerList)
+			System.out.printf("%s: %d | ", r.getRegisterName(), r.getData());
 		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
 
-		Scanner entrada = new Scanner(System.in);
+		Scanner input = new Scanner(System.in);
 		System.out.println("Press <Enter> to continue...");
-		entrada.nextLine();
+		input.nextLine();
 	}
 
 	private void simulationFetch() {

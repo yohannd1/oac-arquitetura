@@ -1,30 +1,26 @@
 package components;
 
+/**
+ * Represents a bus, storing data and being connected to multiple components.
+ */
 public class Bus {
-	
 	private int data;
-	
-	
-	
+
 	public Bus() {
 		data = 0;
 	}
 
 	/**
-	 * This method implements the storing of a data into the bus
-	 * @param data
+	 * Put the data in the bus.
 	 */
-	public void put(int data){
+	public void put(int data) {
 		this.data = data;
 	}
-	
+
 	/**
-	 * This method implements the retrieving of a data from the bus
-	 * @return
+	 * Get the data from the bus.
 	 */
 	public int get() {
 		return this.data;
-		
 	}
-
 }
