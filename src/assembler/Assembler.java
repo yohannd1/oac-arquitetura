@@ -292,33 +292,6 @@ public class Assembler {
 		return -1;
 	}
 
-	public static void main(String[] args) throws IOException {
-		if (args.length != 1) {
-			System.err.println("Usage: assembler <INPUT>");
-			System.err.println("INPUT must be the name of a .dsf file, without the extension");
-			System.exit(2);
-		}
-
-		String filename = args[0];
-
-		Assembler assembler = new Assembler();
-
-		try {
-			System.err.printf("Reading source assembler file: %s.dsf\n", filename);
-			assembler.read(filename);
-
-			System.err.println("Generating the object program");
-			assembler.parseAll();
-
-			System.err.printf("Generating executable: %s.dxf\n", filename);
-			assembler.makeExecutable(filename);
-
-			System.err.println("Assembling finished!");
-		} catch (ParseException ex) {
-			System.err.println("Error while parsing: " + ex);
-		}
-	}
-
 	/**
 	 * Parsing submodule with most of the parsing logic.
 	 */
@@ -500,5 +473,32 @@ public class Assembler {
 		sb.append(arr[arr.length - 1].toString());
 		sb.append("]");
 		return sb.toString();
+	}
+
+	public static void main(String[] args) throws IOException {
+		if (args.length != 1) {
+			System.err.println("Usage: assembler <INPUT>");
+			System.err.println("INPUT must be the name of a .dsf file, without the extension");
+			System.exit(2);
+		}
+
+		String filename = args[0];
+
+		Assembler assembler = new Assembler();
+
+		try {
+			System.err.printf("Reading source assembler file: %s.dsf\n", filename);
+			assembler.read(filename);
+
+			System.err.println("Generating the object program");
+			assembler.parseAll();
+
+			System.err.printf("Generating executable: %s.dxf\n", filename);
+			assembler.makeExecutable(filename);
+
+			System.err.println("Assembling finished!");
+		} catch (ParseException ex) {
+			System.err.println("Error while parsing: " + ex);
+		}
 	}
 }
