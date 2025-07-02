@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 
 import components.Register;
 import architecture.Architecture;
-import architecture.CommandID;
+import architecture.Architecture.CommandID;
 
 public class Assembler {
 	private ArrayList<String> lines;
