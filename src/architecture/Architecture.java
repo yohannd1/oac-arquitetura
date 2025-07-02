@@ -85,7 +85,7 @@ public class Architecture {
 		IR = new Register("IR", intBus, intBus);
 		SP = new Register("SP", intBus, intBus); // TODO: adicionar StkTOP e StkBOT (não SP)
 		// SP.setData(memorySize); // FIXME: não precisa inicializar SP aqui - o programa é responsável de fazer isso
-		Flags = new Register("Flags", 2, intBus);
+		Flags = new Register(2, intBus);
 
 		REG0 = new Register("REG0", intBus, intBus);
 		REG1 = new Register("REG1", intBus, intBus);

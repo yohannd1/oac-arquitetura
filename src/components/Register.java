@@ -1,15 +1,15 @@
 package components;
 
 public class Register {
-
+	
 	private String registerName;
-
+	
 	private int flagBits[];
 	private int numFlags;
-
+	
 	private int data;
 	private Bus busExt, busInt;
-
+	
 	/**
 	 * Default constructor
 	 * @param busExt
@@ -19,20 +19,20 @@ public class Register {
 		this.busExt = extBus;
 		this.busInt = intBus;
 	}
-
+	
 	public int getData() {
 		return data;
 	}
-
+	
 	/**
 	 * This special constructor is used to make Flags register
 	 * with special bits for special informations
 	 * @param numberOfBits
 	 * @param bus
 	 */
-	public Register(String name, int numberOfBits, Bus bus) {
+	public Register(int numberOfBits, Bus bus) {
 		super();
-		this.registerName = name;
+		this.registerName = "Flags";
 		this.numFlags = numberOfBits;
 		this.flagBits = new int[numFlags];
 		for (int i=0;i<numFlags;i++) {
@@ -40,7 +40,7 @@ public class Register {
 		}
 		this.busExt = bus;
 	}
-
+	
 	public String getRegisterName() {
 		return registerName;
 	}
@@ -51,9 +51,9 @@ public class Register {
 	 */
 	public int getBit(int pos) {
 		return flagBits[pos];
-
+		
 	}
-
+	
 	/**
 	 * This method allows the UC or the ULA to set any special bit
 	 * @param pos
@@ -70,21 +70,21 @@ public class Register {
 	public void store() {
 		data = busExt.get();
 	}
-
+	
 	/**
 	 * This method reads the data from this register and stores it into the bus
 	 */
 	public void read() {
 		busExt.put(data);
 	}
-
+	
 	/**
 	 * This method copies the data from this register to the internalbus
 	 */
 	public void internalRead() {
 		busInt.put(data);
 	}
-
+	
 	/**
 	 * This method sopies the data from the internalbus to this register
 	 */

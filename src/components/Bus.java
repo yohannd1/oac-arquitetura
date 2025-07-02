@@ -1,11 +1,11 @@
 package components;
 
 public class Bus {
-	
+
 	private int data;
-	
-	
-	
+
+
+
 	public Bus() {
 		data = 0;
 	}
@@ -17,14 +17,14 @@ public class Bus {
 	public void put(int data){
 		this.data = data;
 	}
-	
+
 	/**
-	 * This method implements the retrieving of a data from the bus
+	 * This methos implements the retrieving of a data from the bus
 	 * @return
 	 */
 	public int get() {
 		return this.data;
-		
+
 	}
 
 }
