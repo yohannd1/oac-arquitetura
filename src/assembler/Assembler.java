@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import components.Register;
 import architecture.Architecture;
@@ -145,15 +147,18 @@ public class Assembler {
 	/**
 	 * Create the executable program from the object program.
 	 *
-	 * @param filename
+	 * @param filename the file where the executable will be put over
 	 * @throws IOException
 	 */
 	public void makeExecutable(String filename) throws IOException {
 		if (!checkProperDeclaration())
 			return;
 
-		// allocate memory space to store program and variables
-		execProgram = (ArrayList<String>) objProgram.clone();
+		// allocate memory space to store program and variables,
+		// and copy the object program data over there
+		execProgram = new ArrayList<>();
+		for (String s : objProgram)
+			execProgram.add(s);
 
 		replaceAllVariables();
 		replaceLabels();
@@ -311,6 +316,174 @@ public class Assembler {
 			System.err.println("Assembling finished!");
 		} catch (ParseException ex) {
 			System.err.println("Error while parsing: " + ex);
+		}
+	}
+
+	/**
+	 * Parsing submodule with most of the parsing logic.
+	 */
+	private static class Parser {
+		static private Pattern VARIABLE_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*$");
+		static private Pattern LABEL_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*:\\s*$");
+		static private Pattern NUMBER_PATT = Pattern.compile("^[0-9]+$");
+		static private Pattern REG_PATT = Pattern.compile("^%reg[0-9]+$");
+
+		/**
+		 * Attempt to parse a variable declaration.
+		 *
+		 * @return the variable name, or null if it's not a variable declaration
+		 */
+		static protected String parseVariableDecl(String s) {
+			Matcher m = VARIABLE_PATT.matcher(s);
+			return m.find() ? m.group(0) : null;
+		}
+
+		static protected boolean isMemName(String s) {
+			return parseVariableDecl(s) != null;
+		}
+
+		static protected boolean isNumber(String s) {
+			return NUMBER_PATT.matcher(s).find();
+		}
+
+		static protected boolean isRegName(String s) {
+			return REG_PATT.matcher(s).find();
+		}
+
+		/**
+		 * Attempt to parse a label declaration.
+		 *
+		 * @return the label name, or null if it's not a label declaration
+		 */
+		static protected String parseLabelDecl(String s) {
+			Matcher m = LABEL_PATT.matcher(s);
+			return m.find() ? m.group(0) : null;
+		}
+
+		static protected boolean isSkippableLine(String line) {
+			return line.length() == 0 || line.charAt(0) == ';';
+		}
+
+		static protected Command parseCommand(String[] tokens)  {
+			if (tokens.length == 0)
+				return null;
+
+			String commandName = tokens[0];
+			int paramCount = tokens.length - 1;
+
+			if (commandName.equals("add") && paramCount == 2) {
+				String arg0 = tokens[1];
+				String arg1 = tokens[2];
+				String[] args = new String[] { arg0, arg1 };
+
+				if (isRegName(arg0) && isRegName(arg1))
+					return new Command(CommandID.ADD_REG_REG, args);
+				else if (isMemName(arg0) && isRegName(arg1))
+					return new Command(CommandID.ADD_MEM_REG, args);
+				else if (isRegName(arg0) && isMemName(arg1))
+					return new Command(CommandID.ADD_REG_MEM, args);
+				else
+					return null;
+			} else if (commandName.equals("sub") && paramCount == 2) {
+				String arg0 = tokens[1];
+				String arg1 = tokens[2];
+				String[] args = new String[] { arg0, arg1 };
+
+				if (isRegName(arg0) && isRegName(arg1))
+					return new Command(CommandID.SUB_REG_REG, args);
+				else if (isMemName(arg0) && isRegName(arg1))
+					return new Command(CommandID.SUB_MEM_REG, args);
+				else if (isRegName(arg0) && isMemName(arg1))
+					return new Command(CommandID.SUB_REG_MEM, args);
+				else
+					return null;
+			} else if (commandName.equals("move") && paramCount == 2) {
+				String arg0 = tokens[1];
+				String arg1 = tokens[2];
+				String[] args = new String[] { arg0, arg1 };
+
+				if (isMemName(arg0) && isRegName(arg1))
+					return new Command(CommandID.MOVE_MEM_REG, args);
+				else if (isRegName(arg0) && isMemName(arg1))
+					return new Command(CommandID.MOVE_REG_MEM, args);
+				else if (isRegName(arg0) && isRegName(arg1))
+					return new Command(CommandID.MOVE_REG_REG, args);
+				else if (isNumber(arg0) && isRegName(arg1))
+					return new Command(CommandID.MOVE_IMM_REG, args);
+				else
+					return null;
+			} else if (commandName.equals("inc") && paramCount == 1) {
+				String arg = tokens[1];
+				String[] args = new String[] { arg };
+
+				if (isRegName(arg))
+					return new Command(CommandID.INC_REG, args);
+				else if (isMemName(arg))
+					return new Command(CommandID.INC_MEM, args);
+				else
+					return null;
+			} else if (commandName.equals("jmp") && paramCount == 1) {
+				String arg = tokens[1];
+				return isMemName(arg) ? new Command(CommandID.JMP, new String[] { arg }) : null;
+			} else if (commandName.equals("jn") && paramCount == 1) {
+				String arg = tokens[1];
+				return isMemName(arg) ? new Command(CommandID.JN, new String[] { arg }) : null;
+			} else if (commandName.equals("jz") && paramCount == 1) {
+				String arg = tokens[1];
+				return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
+			} else if (commandName.equals("jnz") && paramCount == 1) {
+				String arg = tokens[1];
+				return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
+			} else if (commandName.equals("jeq") && paramCount == 3) {
+				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
+				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
+					? new Command(CommandID.JEQ, args)
+					: null;
+			} else if (commandName.equals("jgt") && paramCount == 3) {
+				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
+				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
+					? new Command(CommandID.JGT, args)
+					: null;
+			} else if (commandName.equals("jlw") && paramCount == 3) {
+				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
+				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
+					? new Command(CommandID.JLW, args)
+					: null;
+			} else if (commandName.equals("call") && paramCount == 1) {
+				String[] args = new String[] { tokens[1] };
+				return (isMemName(tokens[1])) ? new Command(CommandID.CALL, args) : null;
+			} else if (commandName.equals("ret") && paramCount == 0) {
+				return new Command(CommandID.RET, new String[] {});
+			} else {
+				return null;
+			}
+		}
+	}
+
+	/**
+	 * Error thrown when an unrecoverable parsing error is reached.
+	 */
+	private static class ParseException extends Exception {
+		public ParseException(String msg) {
+			super(msg);
+		}
+	}
+
+	/**
+	 * Data class used for representing commands.
+	 */
+	private static class Command {
+		CommandID id;
+		String[] args;
+
+		public Command(CommandID id, String[] args) {
+			this.id = id;
+			this.args = args;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("Command[id=%s, args=%s]", id, args);
 		}
 	}
 }
