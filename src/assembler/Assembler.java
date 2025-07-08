@@ -337,99 +337,120 @@ public class Assembler {
 			return line.length() == 0 || line.charAt(0) == ';';
 		}
 
-		static protected Command parseCommand(String[] tokens)  {
+		/**
+		 * Matcher for a specific command.
+		 */
+		static private class CmdMatch {
+			CommandID id;
+			String name;
+
+			// Array with a collection of "reg" | "mem" | "imm"
+			String[] signature;
+
+			public CmdMatch(CommandID id, String name, String[] signature) {
+				this.id = id;
+				this.name = name;
+				this.signature = signature;
+			}
+
+			@Override
+			public String toString() {
+				return String.format("CmdMatch[id=%s, name=%s, signature=%s]", id, name, arrayToString(signature));
+			}
+		}
+
+		static private CmdMatch[] VALID_COMMANDS = makeValidCommands();
+
+		static private CmdMatch[] makeValidCommands() {
+			String[] arg_m = new String[] { "mem" };
+			String[] arg_rr = new String[] { "reg", "reg" };
+			String[] arg_mr = new String[] { "mem", "reg" };
+			String[] arg_rm = new String[] { "reg", "mem" };
+			String[] arg_rrm = new String[] { "reg", "reg", "mem" };
+
+			return new CmdMatch[] {
+				new CmdMatch(CommandID.ADD_REG_REG, "add", arg_rr),
+				new CmdMatch(CommandID.ADD_MEM_REG, "add", arg_mr),
+				new CmdMatch(CommandID.ADD_REG_MEM, "add", arg_rm),
+				new CmdMatch(CommandID.SUB_REG_REG, "sub", arg_rr),
+				new CmdMatch(CommandID.SUB_MEM_REG, "sub", arg_mr),
+				new CmdMatch(CommandID.SUB_REG_MEM, "sub", arg_rm),
+				new CmdMatch(CommandID.MOVE_MEM_REG, "move", arg_mr),
+				new CmdMatch(CommandID.MOVE_REG_MEM, "move", arg_rm),
+				new CmdMatch(CommandID.MOVE_REG_REG, "move", arg_rr),
+				new CmdMatch(CommandID.MOVE_IMM_REG, "move", new String[] { "imm", "reg" }),
+				new CmdMatch(CommandID.INC_REG, "inc", new String[] { "reg" }),
+				new CmdMatch(CommandID.INC_MEM, "inc", arg_m),
+				new CmdMatch(CommandID.JMP, "jmp", arg_m),
+				new CmdMatch(CommandID.JN, "jn", arg_m),
+				new CmdMatch(CommandID.JZ, "jz", arg_m),
+				new CmdMatch(CommandID.JNZ, "jnz", arg_m),
+				new CmdMatch(CommandID.JEQ, "jeq", arg_rrm),
+				new CmdMatch(CommandID.JGT, "jgt", arg_rrm),
+				new CmdMatch(CommandID.JLW, "jlw", arg_rrm),
+				new CmdMatch(CommandID.CALL, "call", arg_m),
+				new CmdMatch(CommandID.RET, "re", new String[] {}),
+			};
+		}
+
+		/**
+		 * Attempts to parse `tokens` and match it with `candidate`, which
+		 * should be one of the possible commands.
+		 *
+		 * @return a string array with the arguments (ready to be embedded into
+		 * a Command instance) if it has succesfully matched, or null if it
+		 * hasn't.
+		 */
+		static private String[] checkAndBuildArgs(String[] tokens, CmdMatch candidate) throws ParseException {
 			if (tokens.length == 0)
 				return null;
 
 			String commandName = tokens[0];
-			int paramCount = tokens.length - 1;
 
-			if (commandName.equals("add") && paramCount == 2) {
-				String arg0 = tokens[1];
-				String arg1 = tokens[2];
-				String[] args = new String[] { arg0, arg1 };
-
-				if (isRegName(arg0) && isRegName(arg1))
-					return new Command(CommandID.ADD_REG_REG, args);
-				else if (isMemName(arg0) && isRegName(arg1))
-					return new Command(CommandID.ADD_MEM_REG, args);
-				else if (isRegName(arg0) && isMemName(arg1))
-					return new Command(CommandID.ADD_REG_MEM, args);
-				else
-					return null;
-			} else if (commandName.equals("sub") && paramCount == 2) {
-				String arg0 = tokens[1];
-				String arg1 = tokens[2];
-				String[] args = new String[] { arg0, arg1 };
-
-				if (isRegName(arg0) && isRegName(arg1))
-					return new Command(CommandID.SUB_REG_REG, args);
-				else if (isMemName(arg0) && isRegName(arg1))
-					return new Command(CommandID.SUB_MEM_REG, args);
-				else if (isRegName(arg0) && isMemName(arg1))
-					return new Command(CommandID.SUB_REG_MEM, args);
-				else
-					return null;
-			} else if (commandName.equals("move") && paramCount == 2) {
-				String arg0 = tokens[1];
-				String arg1 = tokens[2];
-				String[] args = new String[] { arg0, arg1 };
-
-				if (isMemName(arg0) && isRegName(arg1))
-					return new Command(CommandID.MOVE_MEM_REG, args);
-				else if (isRegName(arg0) && isMemName(arg1))
-					return new Command(CommandID.MOVE_REG_MEM, args);
-				else if (isRegName(arg0) && isRegName(arg1))
-					return new Command(CommandID.MOVE_REG_REG, args);
-				else if (isNumber(arg0) && isRegName(arg1))
-					return new Command(CommandID.MOVE_IMM_REG, args);
-				else
-					return null;
-			} else if (commandName.equals("inc") && paramCount == 1) {
-				String arg = tokens[1];
-				String[] args = new String[] { arg };
-
-				if (isRegName(arg))
-					return new Command(CommandID.INC_REG, args);
-				else if (isMemName(arg))
-					return new Command(CommandID.INC_MEM, args);
-				else
-					return null;
-			} else if (commandName.equals("jmp") && paramCount == 1) {
-				String arg = tokens[1];
-				return isMemName(arg) ? new Command(CommandID.JMP, new String[] { arg }) : null;
-			} else if (commandName.equals("jn") && paramCount == 1) {
-				String arg = tokens[1];
-				return isMemName(arg) ? new Command(CommandID.JN, new String[] { arg }) : null;
-			} else if (commandName.equals("jz") && paramCount == 1) {
-				String arg = tokens[1];
-				return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
-			} else if (commandName.equals("jnz") && paramCount == 1) {
-				String arg = tokens[1];
-				return isMemName(arg) ? new Command(CommandID.JZ, new String[] { arg }) : null;
-			} else if (commandName.equals("jeq") && paramCount == 3) {
-				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
-				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-					? new Command(CommandID.JEQ, args)
-					: null;
-			} else if (commandName.equals("jgt") && paramCount == 3) {
-				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
-				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-					? new Command(CommandID.JGT, args)
-					: null;
-			} else if (commandName.equals("jlw") && paramCount == 3) {
-				String[] args = new String[] { tokens[1], tokens[2], tokens[3] };
-				return (isRegName(tokens[1]) && isRegName(tokens[2]) && isMemName(tokens[3]))
-					? new Command(CommandID.JLW, args)
-					: null;
-			} else if (commandName.equals("call") && paramCount == 1) {
-				String[] args = new String[] { tokens[1] };
-				return (isMemName(tokens[1])) ? new Command(CommandID.CALL, args) : null;
-			} else if (commandName.equals("ret") && paramCount == 0) {
-				return new Command(CommandID.RET, new String[] {});
-			} else {
+			if (!commandName.equals(candidate.name) || tokens.length - 1 != candidate.signature.length)
 				return null;
+
+			String[] args = new String[candidate.signature.length];
+
+			for (int i = 1; i < tokens.length; i++) {
+				String token = tokens[i];
+				String sig = candidate.signature[i - 1];
+
+				if (sig.equals("mem")) {
+					if (!isMemName(token))
+						return null;
+					System.out.printf("GOT MEM %s\n", token);
+					args[i - 1] = "&" + token;
+				} else if (sig.equals("reg")) {
+					if (!isRegName(token))
+						return null;
+					System.out.printf("GOT REG %s\n", token);
+					args[i - 1] = token;
+				} else if (sig.equals("imm")) {
+					if (!isNumber(token))
+						return null;
+					System.out.printf("GOT IMM %s\n", token);
+					args[i - 1] = token;
+				} else {
+					throw new ParseException(
+						String.format("unexpected argument type: %s", sig));
+				}
 			}
+
+			return args;
+		}
+
+		static protected Command parseCommand(String[] tokens) throws ParseException {
+			if (tokens.length == 0)
+				return null;
+
+			for (CmdMatch candidate : VALID_COMMANDS) {
+				String[] args = checkAndBuildArgs(tokens, candidate);
+				if (args != null)
+					return new Command(candidate.id, args);
+			}
+
+			return null;
 		}
 	}
 
@@ -499,6 +520,7 @@ public class Assembler {
 			System.err.println("Assembling finished!");
 		} catch (ParseException ex) {
 			System.err.println("Error while parsing: " + ex);
+			System.exit(1);
 		}
 	}
 }
