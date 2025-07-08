@@ -49,28 +49,60 @@ public class Architecture {
 		}
 	}
 
+	private static int MAIN_MEMORY_SIZE = 256;
+
 	private boolean simulation;
 	private boolean halt;
 
 	private Bus intBus;
 	private Bus extBus;
 
+	/**
+	 * The memory unit connected to the external bus.
+	 *
+	 * Operation overview:
+	 *   store(): on the first call, reads an address `a` from extBus. On the second, reads a word `b` from extBus and performs `memory[a] <- b`
+	 *   read(): reads an address `a` from extBus and puts back on extBus `memory[a]`
+	 */
 	private Memory memory;
-	private int memorySize;
+
+	/**
+	 * The memory unit used for conditional jumps.
+	 *
+	 * Operation overview:
+	 *   storeIn0(): statusMem[0] <- intBus
+	 *   storeIn1(): statusMem[1] <- intBus
+	 *   read(): reads a 0 or 1 from `a` from intBus and performs `intBus <- statusMem[a]`
+	 */
+	private Memory statusMem;
 
 	private Register PC;
 	private Register IR;
 	private Register SP;
 	private Register Flags;
-
 	private Register REG0;
 	private Register REG1;
 	private Register REG2;
 	private Register REG3;
-
 	public Register[] registerList;
 
+	/**
+	 * The arithmetic logic unit (ALU), a.k.a. ULA.
+	 *
+	 * Operation overview:
+	 *   add(): ula(1) <- ula(0) + ula(1)
+	 *   sub(): ula(1) <- ula(0) - ula(1)
+	 *   inc(): ula(1) <- ula(1) + 1
+	 * None of these methods interact with intBus or extBus.
+	 *
+	 * Data transfer:
+	 *   store(regId): TODO
+	 *   read(): TODO
+	 *   internalStore(regId): TODO
+	 *   internalRead(): TODO
+	 */
 	private Ula ula;
+
 	private Demux demux;
 	private ArrayList<String> commandsList;
 
@@ -78,13 +110,13 @@ public class Architecture {
 		intBus = new Bus();
 		extBus = new Bus();
 
-		memorySize = 256;
-		memory = new Memory(memorySize, extBus);
+		memory = new Memory(MAIN_MEMORY_SIZE, extBus);
+		statusMem = new Memory(2, intBus); // TODO: fica conectada a intBus mesmo?
 
 		PC = new Register("PC", intBus, intBus);
 		IR = new Register("IR", intBus, intBus);
 		SP = new Register("SP", intBus, intBus); // TODO: adicionar StkTOP e StkBOT (não SP)
-		// SP.setData(memorySize); // FIXME: não precisa inicializar SP aqui - o programa é responsável de fazer isso
+		// SP.setData(MAIN_MEMORY_SIZE); // FIXME: não precisa inicializar SP aqui - o programa é responsável de fazer isso
 		Flags = new Register(2, intBus);
 
 		REG0 = new Register("REG0", intBus, intBus);
@@ -92,7 +124,7 @@ public class Architecture {
 		REG2 = new Register("REG2", intBus, intBus);
 		REG3 = new Register("REG3", intBus, intBus);
 
-		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP };
+		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP, Flags };
 
 		ula = new Ula(intBus, intBus);
 
@@ -674,7 +706,7 @@ public class Architecture {
 
 	private void fetch() {
 		PC.read();
-		if (PC.getData() >= memorySize) {
+		if (PC.getData() >= MAIN_MEMORY_SIZE) {
 			halt = true; return;
 		}
 		extBus.put(intBus.get());
@@ -738,7 +770,7 @@ public class Architecture {
 	}
 
 	public int getMemorySize() {
-		return memorySize;
+		return MAIN_MEMORY_SIZE;
 	}
 
 	public static void main(String[] args) throws IOException {
