@@ -103,8 +103,12 @@ public class Architecture {
 	 */
 	private Ula ula;
 
+	/**
+	 * The register demux.
+	 *
+	 * TODO: operations
+	 */
 	private Demux demux;
-	private ArrayList<String> commandsList;
 
 	private void componentsInstances() {
 		intBus = new Bus();
@@ -129,7 +133,6 @@ public class Architecture {
 		ula = new Ula(intBus, intBus);
 
 		demux = new Demux();
-		fillCommandsList();
 	}
 
 	public Architecture() {
@@ -140,31 +143,6 @@ public class Architecture {
 	public Architecture(boolean sim) {
 		componentsInstances();
 		simulation = sim;
-	}
-
-	protected void fillCommandsList() {
-		commandsList = new ArrayList<String>();
-		commandsList.add("add_rr");    // 0
-		commandsList.add("add_mr");    // 1
-		commandsList.add("add_rm");    // 2
-		commandsList.add("sub_rr");    // 3
-		commandsList.add("sub_mr");    // 4
-		commandsList.add("sub_rm");    // 5
-		commandsList.add("move_mr");   // 6
-		commandsList.add("move_rm");   // 7
-		commandsList.add("move_rr");   // 8
-		commandsList.add("move_ir");   // 9
-		commandsList.add("inc_r");     // 10
-		commandsList.add("inc_m");     // 11
-		commandsList.add("jmp");       // 12
-		commandsList.add("jn");        // 13
-		commandsList.add("jz");        // 14
-		commandsList.add("jnz");       // 15
-		commandsList.add("jeq");       // 16
-		commandsList.add("jgt");       // 17
-		commandsList.add("jlw");       // 18
-		commandsList.add("call");      // 19
-		commandsList.add("ret");       // 20
 	}
 
 	private void setStatusFlags(int result) {
@@ -733,7 +711,9 @@ public class Architecture {
 
 	private void simulationDecodeExecuteBefore(int command) {
 		System.out.println("----------BEFORE Decode and Execute phases--------------");
-		String instruction = (command >= 0 && command < commandsList.size()) ? commandsList.get(command) : "HALT";
+
+		CommandID id = CommandID.fromInt(command);
+		String instruction = (id == null) ? "invalid command - will halt" : id.toString();
 
 		System.out.println("PC: " + PC.getData() + " | IR: " + IR.getData() + " ("+instruction+") | SP: " + SP.getData());
 		System.out.print("REGISTERS: ");
