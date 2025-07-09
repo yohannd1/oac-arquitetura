@@ -709,43 +709,52 @@ public class Architecture {
 			return true;
 	}
 
-	private void simulationDecodeExecuteBefore(int command) {
-		System.out.println("----------BEFORE Decode and Execute phases--------------");
+	private void simulationPrintRegisters() {
+		CommandID id = CommandID.fromInt(IR.getData());
+		String commandName = (id == null) ? "invalid command, will halt" : id.toString();
 
-		CommandID id = CommandID.fromInt(command);
-		String instruction = (id == null) ? "invalid command - will halt" : id.toString();
+		System.out.printf(
+				"PC: %d | IR: %d (%s) | SP: %d | FLAGS: (Z=%d, N=%d)\n",
+				PC.getData(), IR.getData(), commandName, SP.getData(),
+				Flags.getBit(0), Flags.getBit(1));
+		System.out.print("All registers: ");
 
-		System.out.println("PC: " + PC.getData() + " | IR: " + IR.getData() + " ("+instruction+") | SP: " + SP.getData());
-		System.out.print("REGISTERS: ");
-		for (Register r : registerList) {
-			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
+		for (int i = 0; i < registerList.length; i++) {
+			Register r = registerList[i];
+			System.out.printf("%s: %s ", r.getRegisterName(), r.getData());
+			if (i < registerList.length - 1)
+				System.out.print("| ");
 		}
-		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
-		System.out.println("Instruction: "+instruction);
+		System.out.println();
+	}
+
+	private void simulationDecodeExecuteBefore(int command) {
+		System.out.println("--- BEFORE DECODE & EXECUTE ---");
+		simulationPrintRegisters();
+		System.out.println();
 	}
 
 	private void simulationDecodeExecuteAfter() {
-		System.out.println("-----------AFTER Decode and Execute phases--------------");
+		System.out.println("--- AFTER DECODE & EXECUTE ---");
 		System.out.println("Internal Bus: " + intBus.get());
 		System.out.println("External Bus: " + extBus.get());
-		System.out.println("PC: " + PC.getData() + " | SP: " + SP.getData());
-		System.out.print("REGISTERS: ");
-		for (Register r : registerList) {
-			System.out.print(r.getRegisterName() + ": " + r.getData() + " | ");
-		}
-		System.out.println("FLAGS (Z,N): " + Flags.getBit(0) + "," + Flags.getBit(1));
+		simulationPrintRegisters();
+		System.out.println();
 
-		Scanner entrada = new Scanner(System.in);
+		waitForEnter();
+	}
+
+	private void waitForEnter() {
+		Scanner sc = new Scanner(System.in);
 		System.out.println("Press <Enter> to continue...");
-		entrada.nextLine();
+		sc.nextLine();
 	}
 
 	private void simulationFetch() {
 		if (simulation) {
-			System.out.println("------------------------------------------------------");
-			System.out.println("-------Fetch Phase------");
-			System.out.println("PC was pointing to: " + (PC.getData() -1) );
-			System.out.println("IR loaded with opcode: " + IR.getData());
+			System.out.println("--- AFTER FETCH ---");
+			simulationPrintRegisters();
+			System.out.println();
 		}
 	}
 
