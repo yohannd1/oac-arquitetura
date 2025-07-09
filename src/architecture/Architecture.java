@@ -166,7 +166,7 @@ public class Architecture {
 		registerList[demux.getValue()].internalStore();
 	}
 
-	private void add_rr() {
+	public void add_rr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -191,7 +191,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void add_mr() {
+	public void add_mr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int mem_addr = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -219,7 +219,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void add_rm() {
+	public void add_rm() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -252,7 +252,7 @@ public class Architecture {
 		memory.store();
 	}
 
-	private void sub_rr() {
+	public void sub_rr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -277,7 +277,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void sub_mr() {
+	public void sub_mr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int mem_addr = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -305,7 +305,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void sub_rm() {
+	public void sub_rm() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -338,7 +338,7 @@ public class Architecture {
 		memory.store();
 	}
 
-	private void move_mr() {
+	public void move_mr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int mem_addr = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -357,7 +357,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void move_rm() {
+	public void move_rm() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -376,7 +376,7 @@ public class Architecture {
 		memory.store();
 	}
 
-	private void move_rr() {
+	public void move_rr() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -392,7 +392,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void move_ir() {
+	public void move_ir() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int immediate = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -406,7 +406,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void inc_r() {
+	public void inc_r() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -422,7 +422,7 @@ public class Architecture {
 		registersStore();
 	}
 
-	private void inc_m() {
+	public void inc_m() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int mem_addr = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -445,7 +445,7 @@ public class Architecture {
 		memory.store();
 	}
 
-	private void jmp() {
+	public void jmp() {
 		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
 		int addr = intBus.get();
 
@@ -453,7 +453,7 @@ public class Architecture {
 		PC.store();
 	}
 
-	private void jn() {
+	public void jn() {
 		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
 		int addr = intBus.get();
 		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -464,7 +464,7 @@ public class Architecture {
 		}
 	}
 
-	private void jz() {
+	public void jz() {
 		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
 		int addr = intBus.get();
 		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -475,7 +475,7 @@ public class Architecture {
 		}
 	}
 
-	private void jnz() {
+	public void jnz() {
 		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
 		int addr = intBus.get();
 		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -486,7 +486,7 @@ public class Architecture {
 		}
 	}
 
-	private void jeq() {
+	public void jeq() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -516,7 +516,7 @@ public class Architecture {
 		}
 	}
 
-	private void jgt() {
+	public void jgt() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -546,7 +546,7 @@ public class Architecture {
 		// }
 	}
 
-	private void jlw() {
+	public void jlw() {
         PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
         int regA_id = intBus.get();
         PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
@@ -576,7 +576,7 @@ public class Architecture {
 		// }
 	}
 
-	private void call() {
+	public void call() {
 		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
 		int jumpAddress = intBus.get();
 
@@ -601,7 +601,7 @@ public class Architecture {
 		PC.store();
 	}
 
-	private void ret() {
+	public void ret() {
 		SP.read();
 		intBus.put(SP.getData());
 		extBus.put(intBus.get());
@@ -765,4 +765,20 @@ public class Architecture {
 		arch.readExec("program");
 		arch.controlUnitEexec();
 	}
+
+	// Functions prefixed with 't' should only be used in testing
+	public Bus tGetIntBus() { return intBus; }
+	public Bus tGetExtBus() { return extBus; }
+	public Memory tGetMemory() { return memory; }
+	public Memory tGetStatusMem() { return statusMem; }
+	public Register tGetPC() { return PC; }
+	public Register tGetIR() { return IR; }
+	public Register tGetSP() { return SP; }
+	public Register tGetFlags() { return Flags; }
+	public Register tGetREG0() { return REG0; }
+	public Register tGetREG1() { return REG1; }
+	public Register tGetREG2() { return REG2; }
+	public Register tGetREG3() { return REG3; }
+	public Ula tGetUla() { return ula; }
+	public Demux tGetDemux() { return demux; }
 }
