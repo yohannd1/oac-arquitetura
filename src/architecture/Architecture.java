@@ -96,10 +96,10 @@ public class Architecture {
 	 * None of these methods interact with intBus or extBus.
 	 *
 	 * Data transfer:
-	 *   store(regId): TODO
-	 *   read(): TODO
-	 *   internalStore(regId): TODO
-	 *   internalRead(): TODO
+	 *   store(id): store the data from extBus into register #`id`
+	 *   read(id): put the data from register #`id` into extBus
+	 *   internalStore(id): store the data from intBus into register #`id`
+	 *   internalRead(id): put the data from register #`id` into intBus
 	 */
 	private Ula ula;
 
@@ -129,9 +129,7 @@ public class Architecture {
 		REG3 = new Register("REG3", intBus, intBus);
 
 		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP, Flags };
-
-		ula = new Ula(intBus, intBus);
-
+		ula = new Ula(extBus, intBus);
 		demux = new Demux();
 	}
 
