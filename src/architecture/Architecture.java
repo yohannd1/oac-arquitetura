@@ -731,6 +731,23 @@ public class Architecture {
 			br.close();
 	}
 
+	public void readExecLines(String[] lines) {
+		int i = 0;
+
+		while (i < lines.length) {
+			String linha = lines[i];
+
+			intBus.put(i);
+			extBus.put(intBus.get());
+			memory.store();
+			intBus.put(Integer.parseInt(linha));
+			extBus.put(intBus.get());
+			memory.store();
+
+			i++;
+		}
+	}
+
 	public void controlUnitEexec() {
 		while (!halt)
 			controlUnitCycle();
@@ -876,8 +893,15 @@ public class Architecture {
 	}
 
 	public static void main(String[] args) throws IOException {
+		if (args.length != 1) {
+			System.err.println("Usage: architecture <INPUT>");
+			System.err.println("INPUT must be the name of a .dxf file, without the extension");
+			System.exit(2);
+		}
+
+		String filename = args[0];
 		Architecture arch = new Architecture(true);
-		arch.readExec("program");
+		arch.readExec(filename);
 		arch.controlUnitEexec();
 	}
 

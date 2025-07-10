@@ -87,6 +87,14 @@ public class Assembler {
 	}
 
 	/**
+	 * Read the lines of a String array into the assembler.
+	 */
+	public void readLines(String[] lines_) {
+		for (String line : lines_)
+			lines.add(line);
+	}
+
+	/**
 	 * Scan the lines from the loaded file, attributing meaning to each line.
 	 *
 	 * @param lines
@@ -123,7 +131,7 @@ public class Assembler {
 				i++;
 			} else if ((labelName = Parser.parseLabelDecl(currentLine)) != null) {
 				// this line is a label declaration
-				System.err.println("Got LABEL " + labelName + " at addr " + objProgram.size());
+				System.err.printf("Got label '%s', addr=%d\n", labelName, objProgram.size());
 				labels.add(labelName);
 				labelsAdresses.add(objProgram.size());
 				i++;
@@ -169,6 +177,29 @@ public class Assembler {
 	}
 
 	/**
+	 * Create the executable program from the object program, and return its lines.
+	 */
+	public String[] makeExecutableLines() {
+		if (!checkProperDeclaration())
+			return null;
+
+		// allocate memory space to store program and variables,
+		// and copy the object program data over there
+		execProgram = new ArrayList<>();
+		for (String s : objProgram)
+			execProgram.add(s);
+
+		replaceAllVariables();
+		replaceLabels();
+		replaceRegisters();
+
+		String[] ret = new String[execProgram.size()];
+		for (int i = 0; i < execProgram.size(); i++)
+			ret[i] = execProgram.get(i);
+		return ret;
+	}
+
+	/**
 	 * Replace all the register names in the executable program with its
 	 * corresponding IDs.
 	 */
@@ -193,8 +224,8 @@ public class Assembler {
 	 */
 	protected void replaceAllVariables() {
 		int position = arch.getMemorySize() - 1; // starting from the end of the memory
-		for (String var : this.variables) { // scanning all variables
-			replaceVariable(var, position);
+		for (String varName : variables) { // scanning all variables
+			replaceVariable(varName, position);
 			position--;
 		}
 	}
@@ -260,16 +291,13 @@ public class Assembler {
 	 */
 	protected boolean checkProperDeclaration() {
 		System.err.println("Checking labels and variables");
+		System.out.println(labels);
 		for (String line : objProgram) {
 			boolean found = false;
 			if (line.startsWith("&")) { // if starts with "&", it is a label or a variable
 				line = line.substring(1, line.length());
-				if (labels.contains(line))
-					found = true;
-				if (variables.contains(line))
-					found = true;
-				if (!found) {
-					System.err.printf("FATAL ERROR! Variable or label %s not declared!\n", line);
+				if (!labels.contains(line) && !variables.contains(line)) {
+					System.err.printf("FATAL ERROR! Variable or label '%s' not declared!\n", line);
 					return false;
 				}
 			}
@@ -308,7 +336,7 @@ public class Assembler {
 		 */
 		static protected String parseVariableDecl(String s) {
 			Matcher m = VARIABLE_PATT.matcher(s);
-			return m.find() ? m.group(0) : null;
+			return m.find() ? m.group(1) : null;
 		}
 
 		static protected boolean isMemName(String s) {
@@ -330,7 +358,7 @@ public class Assembler {
 		 */
 		static protected String parseLabelDecl(String s) {
 			Matcher m = LABEL_PATT.matcher(s);
-			return m.find() ? m.group(0) : null;
+			return m.find() ? m.group(1) : null;
 		}
 
 		static protected boolean isSkippableLine(String line) {
@@ -457,7 +485,7 @@ public class Assembler {
 	/**
 	 * Error thrown when an unrecoverable parsing error is reached.
 	 */
-	private static class ParseException extends Exception {
+	public static class ParseException extends Exception {
 		public ParseException(String msg) {
 			super(msg);
 		}

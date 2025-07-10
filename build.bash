@@ -36,7 +36,7 @@ downloadIfNotExist() {
 }
 
 doBuild() {
-  sources=("$srcDir"/**/*.java)
+  sources=("$srcDir"/**/*.java "$srcDir"/*.java)
   cflags=(-Xlint:unchecked)
 
   downloadIfNotExist "$depsDir/junit.jar" \
