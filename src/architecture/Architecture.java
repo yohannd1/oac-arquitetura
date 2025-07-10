@@ -115,7 +115,7 @@ public class Architecture {
 		extBus = new Bus();
 
 		memory = new Memory(MAIN_MEMORY_SIZE, extBus);
-		statusMem = new Memory(2, intBus); // TODO: fica conectada a intBus mesmo?
+		statusMem = new Memory(2, intBus);
 
 		PC = new Register("PC", intBus, intBus);
 		IR = new Register("IR", intBus, intBus);
@@ -487,33 +487,82 @@ public class Architecture {
 	}
 
 	public void jeq() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regB_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// read regA id from memory and put it on intBus
+		ula.read(1);
+		memory.read();
+		ula.store(0);
+		ula.internalRead(0);
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
+		// get the id and read the specified register's value, then store it into IR
+		demux.setValue(intBus.get());
 		registersRead();
+		IR.store();
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
+
+		// read regA id from memory and put it on intBus
+		ula.read(1);
+		memory.read();
+		ula.store(0);
+		ula.internalRead(0);
+
+		// get the regB id and read the specified register's value, then store it into ula(1)
+		demux.setValue(intBus.get());
+		registersRead();
+		ula.internalStore(1);
+
+		// get regA's value (from IR) and put it into ula(1)
+		IR.read();
+		ula.internalStore(0);
+
+		// perform a subtraction and update the flags register
+		ula.sub();
+		ula.internalRead(1);
+		setStatusFlags(intBus.get());
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
+
+		// get jump address from memory, and put it into ula(0)
+		ula.read(1);
+		memory.read();
 		ula.store(0);
 
-		demux.setValue(regB_id);
-		registersRead();
-		ula.store(1);
+		// put the address in the status memory (slot 1, when the values were equal)
+		ula.internalRead(0);
+		statusMem.storeIn1();
 
-		ula.sub();
-		ula.read(1);
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 
-		if (intBus.get() == 0) {
-			intBus.put(mem_addr);
-			PC.store();
-		}
+		// put the address of the next instruction in the status memory (slot 0, when the values were different)
+		PC.read();
+		statusMem.storeIn0();
+
+		// jump to the address (based on the zero flag)
+		intBus.put(Flags.getBit(0));
+		statusMem.read();
+		PC.store();
 	}
 
 	public void jgt() {
@@ -651,7 +700,8 @@ public class Architecture {
 		IR.read();
 		int command = intBus.get();
 
-		if (simulation) simulationDecodeExecuteBefore(command);
+		if (simulation)
+			simulationDecodeExecuteBefore();
 
 		switch (command) {
 			case 0: add_rr(); break;
@@ -713,14 +763,14 @@ public class Architecture {
 			return true;
 	}
 
-	private void simulationPrintRegisters() {
+	private void simulationPrintState() {
 		CommandID id = CommandID.fromInt(IR.getData());
 		String commandName = (id == null) ? "invalid command, will halt" : id.toString();
 
+		System.out.printf("intBus: %d | extBus: %d\n", intBus.get(), extBus.get());
 		System.out.printf(
-				"PC: %d | IR: %d (%s) | SP: %d | FLAGS: (Z=%d, N=%d)\n",
-				PC.getData(), IR.getData(), commandName, SP.getData(),
-				Flags.getBit(0), Flags.getBit(1));
+				"IR: %d (%s) | FLAGS: (Z=%d, N=%d)\n",
+				IR.getData(), commandName, Flags.getBit(0), Flags.getBit(1));
 		System.out.print("All registers: ");
 
 		for (int i = 0; i < registerList.length; i++) {
@@ -732,17 +782,15 @@ public class Architecture {
 		System.out.println();
 	}
 
-	private void simulationDecodeExecuteBefore(int command) {
+	private void simulationDecodeExecuteBefore() {
 		System.out.println("--- BEFORE DECODE & EXECUTE ---");
-		simulationPrintRegisters();
+		simulationPrintState();
 		System.out.println();
 	}
 
 	private void simulationDecodeExecuteAfter() {
 		System.out.println("--- AFTER DECODE & EXECUTE ---");
-		System.out.println("Internal Bus: " + intBus.get());
-		System.out.println("External Bus: " + extBus.get());
-		simulationPrintRegisters();
+		simulationPrintState();
 		System.out.println();
 
 		waitForEnter();
@@ -761,7 +809,7 @@ public class Architecture {
 
 		if (simulation) {
 			System.out.println("--- AFTER FETCH ---");
-			simulationPrintRegisters();
+			simulationPrintState();
 			System.out.println();
 		}
 	}
