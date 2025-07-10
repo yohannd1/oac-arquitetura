@@ -634,14 +634,17 @@ public class Architecture {
 	}
 
 	public void controlUnitEexec() {
-		halt = false;
-		while (!halt) {
-			fetch();
-			if (!halt) {
-				decodeExecute();
-			}
-		}
+		while (!halt)
+			controlUnitCycle();
 		System.out.println("--- EXECUTION HALTED ---");
+	}
+
+	public void controlUnitCycle() {
+		if (halt) return;
+		fetch();
+
+		if (halt) return;
+		decodeExecute();
 	}
 
 	private void decodeExecute() {
@@ -680,24 +683,27 @@ public class Architecture {
 		if (simulation) simulationDecodeExecuteAfter();
 	}
 
-	private void fetch() {
-		PC.read();
-		if (PC.getData() >= MAIN_MEMORY_SIZE) {
-			halt = true; return;
+	public void fetch() {
+		PC.read(); // pc->intBus
+		if (intBus.get() >= MAIN_MEMORY_SIZE) {
+			halt = true;
+			return;
 		}
-		extBus.put(intBus.get());
-		memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		IR.store();
 
+		extBus.put(intBus.get()); // intBus->extBus
+		memory.read(); // mem(r)<-extBus
+		intBus.put(extBus.get()); // extBus->intBus
+		IR.store(); // IR<-intBus
+
+		// pc++
 		PC.read();
-		ula.store(0);
+		ula.store(1);
 		ula.inc();
-		ula.read(0);
+		ula.read(1);
 		PC.store();
 
-		if (simulation) simulationFetch();
+		if (simulation)
+			simulationFetch();
 	}
 
 	private boolean hasOperands(String instruction) {
@@ -749,6 +755,10 @@ public class Architecture {
 	}
 
 	private void simulationFetch() {
+		for (int i = PC.getData(); i < PC.getData() + 12; i++)
+			System.out.printf("%d ", memory.getDataList()[i]);
+		System.out.println();
+
 		if (simulation) {
 			System.out.println("--- AFTER FETCH ---");
 			simulationPrintRegisters();

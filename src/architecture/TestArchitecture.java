@@ -7,61 +7,84 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import components.Memory;
+import architecture.Architecture.CommandID;
 
 public class TestArchitecture {
-
 	static private void copyIntoMemory(Memory mem, int start, int[] data) {
 		int[] memData = mem.getDataList();
 		for (int i = 0; i < data.length; i++)
 			memData[start + i] = data[i];
 	}
 
-	//uncomment the anotation below to run the architecture showing components status
-	//@Test
-	public void testShowComponentes() {
+	////uncomment the anotation below to run the architecture showing components status
+	////@Test
+	//public void testShowComponentes() {
+	//	//a complete test (for visual purposes only).
+	//	//a single code as follows
+////		ldi 2
+////		store 40
+////		ldi -4
+////		point:
+////		store 41  //mem[41]=-4 (then -3, -2, -1, 0)
+////		read 40
+////		add 40    //mem[40] + mem[40]
+////		store 40  //result must be in 40
+////		read 41
+////		inc
+////		jn point
+////		end
 
-		//a complete test (for visual purposes only).
-		//a single code as follows
-//		ldi 2
-//		store 40
-//		ldi -4
-//		point:
-//		store 41  //mem[41]=-4 (then -3, -2, -1, 0)
-//		read 40
-//		add 40    //mem[40] + mem[40]
-//		store 40  //result must be in 40
-//		read 41
-//		inc
-//		jn point
-//		end
+	//	Architecture arch = new Architecture(true);
+	//	arch.tGetMemory().getDataList()[0]=7;
+	//	arch.tGetMemory().getDataList()[1]=2;
+	//	arch.tGetMemory().getDataList()[2]=6;
+	//	arch.tGetMemory().getDataList()[3]=40;
+	//	arch.tGetMemory().getDataList()[4]=7;
+	//	arch.tGetMemory().getDataList()[5]=-4;
+	//	arch.tGetMemory().getDataList()[6]=6;
+	//	arch.tGetMemory().getDataList()[7]=41;
+	//	arch.tGetMemory().getDataList()[8]=5;
+	//	arch.tGetMemory().getDataList()[9]=40;
+	//	arch.tGetMemory().getDataList()[10]=0;
+	//	arch.tGetMemory().getDataList()[11]=40;
+	//	arch.tGetMemory().getDataList()[12]=6;
+	//	arch.tGetMemory().getDataList()[13]=40;
+	//	arch.tGetMemory().getDataList()[14]=5;
+	//	arch.tGetMemory().getDataList()[15]=41;
+	//	arch.tGetMemory().getDataList()[16]=8;
+	//	arch.tGetMemory().getDataList()[17]=4;
+	//	arch.tGetMemory().getDataList()[18]=6;
+	//	arch.tGetMemory().getDataList()[19]=-1;
+	//	arch.tGetMemory().getDataList()[40]=0;
+	//	arch.tGetMemory().getDataList()[41]=0;
+	//	//now the program and the variables are stored. we can run
+	//	arch.controlUnitEexec();
 
-		Architecture arch = new Architecture(true);
-		arch.tGetMemory().getDataList()[0]=7;
-		arch.tGetMemory().getDataList()[1]=2;
-		arch.tGetMemory().getDataList()[2]=6;
-		arch.tGetMemory().getDataList()[3]=40;
-		arch.tGetMemory().getDataList()[4]=7;
-		arch.tGetMemory().getDataList()[5]=-4;
-		arch.tGetMemory().getDataList()[6]=6;
-		arch.tGetMemory().getDataList()[7]=41;
-		arch.tGetMemory().getDataList()[8]=5;
-		arch.tGetMemory().getDataList()[9]=40;
-		arch.tGetMemory().getDataList()[10]=0;
-		arch.tGetMemory().getDataList()[11]=40;
-		arch.tGetMemory().getDataList()[12]=6;
-		arch.tGetMemory().getDataList()[13]=40;
-		arch.tGetMemory().getDataList()[14]=5;
-		arch.tGetMemory().getDataList()[15]=41;
-		arch.tGetMemory().getDataList()[16]=8;
-		arch.tGetMemory().getDataList()[17]=4;
-		arch.tGetMemory().getDataList()[18]=6;
-		arch.tGetMemory().getDataList()[19]=-1;
-		arch.tGetMemory().getDataList()[40]=0;
-		arch.tGetMemory().getDataList()[41]=0;
-		//now the program and the variables are stored. we can run
-		arch.controlUnitEexec();
+	//}
 
+	static private Architecture makeArchWithProgram(int[] program) {
+		Architecture arch = new Architecture(false);
+		copyIntoMemory(arch.tGetMemory(), 0, program);
+		return arch;
 	}
+
+	@Test
+	public void testFetch() {
+		Architecture arch = makeArchWithProgram(new int[] { 100 });
+		arch.fetch();
+		assertEquals(100, arch.tGetIR().getData());
+	}
+
+	@Test
+	public void testJeq() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.JEQ.toInt(), 1, 1, 200,
+		});
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+	}
+
+	// TODO: tests for: JGT, JLW, CALL, RET
 
 	//@Test
 	//public void testAdd() {
