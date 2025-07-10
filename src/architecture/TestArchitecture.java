@@ -77,11 +77,45 @@ public class TestArchitecture {
 
 	@Test
 	public void testJeq() {
-		Architecture arch = makeArchWithProgram(new int[] {
+		Architecture arch;
+
+		// Case 1: equal values
+		arch = makeArchWithProgram(new int[] {
 			CommandID.JEQ.toInt(), 1, 1, 200,
 		});
 		arch.controlUnitCycle();
 		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: different values
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JEQ.toInt(), 1, 2, 200,
+		});
+		arch.tGetIntBus().put(25);
+		arch.tGetREG0().store();
+		assertNotEquals(arch.tGetREG0().getData(), arch.tGetREG1().getData());
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
+	}
+
+	@Test
+	public void testJgt() {
+		Architecture arch;
+
+		// Case 1: REG0 > REG1
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JGT.toInt(), 1, 2, 200,
+		});
+		arch.tGetIntBus().put(25);
+		arch.tGetREG0().store();
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: REG0 = REG1 = 0
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JGT.toInt(), 1, 2, 200,
+		});
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
 	}
 
 	// TODO: tests for: JGT, JLW, CALL, RET
