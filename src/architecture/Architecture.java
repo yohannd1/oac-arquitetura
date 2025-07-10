@@ -752,28 +752,36 @@ public class Architecture {
 		if (simulation)
 			simulationDecodeExecuteBefore();
 
+		switch (CommandID.fromInt(command)) {
+		case CommandID.ADD_REG_REG: add_rr(); break;
+		case CommandID.ADD_MEM_REG: add_mr(); break;
+		case CommandID.ADD_REG_MEM: add_rm(); break;
+		case CommandID.SUB_REG_REG: sub_rr(); break;
+		case CommandID.SUB_MEM_REG: sub_mr(); break;
+		case CommandID.SUB_REG_MEM: sub_rm(); break;
+		case CommandID.MOVE_MEM_REG: move_mr(); break;
+		case CommandID.MOVE_REG_MEM: move_rm(); break;
+		case CommandID.MOVE_REG_REG: move_rr(); break;
+		case CommandID.MOVE_IMM_REG: move_ir(); break;
+		case CommandID.INC_REG: inc_r(); break;
+		case CommandID.INC_MEM: inc_m(); break;
+		case CommandID.JMP: jmp(); break;
+		case CommandID.JN: jn(); break;
+		case CommandID.JZ: jz(); break;
+		case CommandID.JNZ: jnz(); break;
+		case CommandID.JEQ: jeq(); break;
+		case CommandID.JGT: jgt(); break;
+		case CommandID.JLW: jlw(); break;
+		case CommandID.CALL: call(); break;
+		case CommandID.RET: ret(); break;
+		default:
+			if (simulation)
+				System.out.printf("Bad instruction %d encountered! Halting.\n", command);
+			halt = true;
+			break;
+		}
+
 		switch (command) {
-			case 0: add_rr(); break;
-			case 1: add_mr(); break;
-			case 2: add_rm(); break;
-			case 3: sub_rr(); break;
-			case 4: sub_mr(); break;
-			case 5: sub_rm(); break;
-			case 6: move_mr(); break;
-			case 7: move_rm(); break;
-			case 8: move_rr(); break;
-			case 9: move_ir(); break;
-			case 10: inc_r(); break;
-			case 11: inc_m(); break;
-			case 12: jmp(); break;
-			case 13: jn(); break;
-			case 14: jz(); break;
-			case 15: jnz(); break;
-			case 16: jeq(); break;
-			case 17: jgt(); break;
-			case 18: jlw(); break;
-			case 19: call(); break;
-			case 20: ret(); break;
 			default:
 				halt = true;
 				break;
