@@ -773,45 +773,24 @@ public class Architecture {
 		// put the address from IR into PC
 		IR.read();
 		PC.store();
-
-		// PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		// int jumpAddress = intBus.get();
-
-		// int returnAddress = PC.getData();
-
-		// SP.read();
-		// ula.store(0);
-		// // ula.dec(); // FIXME: a ULA não tem dec. talvez ler um -1 da memória e somar?
-		// ula.read(0);
-		// SP.store();
-
-		// SP.read();
-		// intBus.put(SP.getData());
-		// extBus.put(intBus.get());
-		// memory.store();
-
-		// intBus.put(returnAddress);
-		// extBus.put(intBus.get());
-		// memory.store();
-
-		// intBus.put(jumpAddress);
-		// PC.store();
 	}
 
 	public void ret() {
-		SP.read();
-		intBus.put(SP.getData());
-		extBus.put(intBus.get());
+		// pc <- memory[stktop]
+		StkTOP.read();
+		ula.internalStore(1);
+		ula.read(1);
 		memory.read();
-		memory.read();
-		intBus.put(extBus.get());
+		ula.store(1);
+		ula.internalRead(1);
 		PC.store();
 
-		SP.read();
-		ula.store(0);
+		// stktop++
+		StkTOP.read();
+		ula.internalStore(1);
 		ula.inc();
-		ula.read(0);
-		SP.store();
+		ula.internalRead(1);
+		StkTOP.store();
 	}
 
 	public void readExec(String filename) throws IOException {

@@ -160,6 +160,27 @@ public class TestArchitecture {
 		assertEquals(2, arch.tGetExtBus().get());
 	}
 
+	@Test
+	public void testRet() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.RET.toInt(),
+		});
+		arch.tGetExtBus().put(199);
+		arch.tGetMemory().store();
+		arch.tGetExtBus().put(115);
+		arch.tGetMemory().store();
+		arch.tGetIntBus().put(199);
+		arch.tGetStkTOP().store();
+		arch.tGetIntBus().put(200);
+		arch.tGetStkBOT().store();
+		arch.controlUnitCycle();
+
+		assertEquals(200, arch.tGetStkTOP().getData());
+		assertEquals(115, arch.tGetPC().getData());
+	}
+
 	// TODO: tests for: RET
 
 	//@Test
