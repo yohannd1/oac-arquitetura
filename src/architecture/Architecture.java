@@ -108,7 +108,9 @@ public class Architecture {
 	/**
 	 * The register demux.
 	 *
-	 * TODO: operations
+	 * Operations:
+	 *   getValue(): get the current register ID in the demux
+	 *   setValue(id): set the register ID to `id`
 	 */
 	private Demux demux;
 
@@ -147,7 +149,7 @@ public class Architecture {
 		simulation = sim;
 	}
 
-	private void setStatusFlags(int result) {
+	public void setStatusFlags(int result) {
 		Flags.setBit(0, 0);
 		Flags.setBit(1, 0);
 		if (result == 0) Flags.setBit(0, 1);
@@ -218,10 +220,10 @@ public class Architecture {
 		PC.store();                    // PC ← bus(int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.read(0);                   // ULA(0) → bus(ext)
-		memory.read();                 // Mem(r) ← bus(ext) 
-		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
 		ula.store(0);                  // ULA(0) ← bus(ext)
-		ula.internalRead(0);           // ULA(0) → bus(int) 
+		ula.internalRead(0);           // ULA(0) → bus(int)
 		IR.store();                    // IR ← bus(int)
 		PC.read();                     // PC → bus(int)
 		ula.internalStore(1);          // ULA(1) ← bus(int)
@@ -230,9 +232,9 @@ public class Architecture {
 		PC.store();                    // PC ← bus(int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.read(0);                   // ULA(0) → bus(ext)
-		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext)
 		ula.store(0);                  // ULA(0) ← bus(ext)
-		ula.internalRead(0);           // ULA(0) → bus(int) 
+		ula.internalRead(0);           // ULA(0) → bus(int)
 		demux.setValue(intBus.get());  // RegID ← bus(int)
 		registersRead();               // Reg(x) → bus (int) (demux)
 		ula.internalStore(1);          // ULA(1) ← bus (int)
@@ -250,7 +252,7 @@ public class Architecture {
 	}
 
 
-	public void add_rm() {			   // Memória[mem] <- RegA + memória[mem]	
+	public void add_rm() {			   // Memória[mem] <- RegA + memória[mem]
 		PC.read();                     // PC → bus(int)
 		ula.internalStore(1);          // ULA(1) ← bus(int)
 		ula.inc();                     // ULA++
@@ -300,22 +302,22 @@ public class Architecture {
 		PC.store();                        // PC ← bus(int)
 		ula.internalStore(0);              // ULA(0) ← bus(int)
 		ula.read(0);                       // ULA(0) → bus(ext)
-		memory.read();                     // Mem(r) ← bus(ext) 
+		memory.read();                     // Mem(r) ← bus(ext)
 		ula.store(0);                      // ULA(0) ← bus(ext)
-		ula.internalRead(0);               // ULA(0) → bus(int) 
+		ula.internalRead(0);               // ULA(0) → bus(int)
 		demux.setValue(intBus.get());      // RegID ← bus(int)
 		registersRead();                   // Reg(x) → bus(int) (demux)
 		IR.store();                        // IR ← bus(int)
-		PC.read();                         // PC → bus(int)    
+		PC.read();                         // PC → bus(int)
 		ula.internalStore(1);              // ULA(1) ← bus(int)
 		ula.inc();                         // ULA++
 		ula.internalRead(1);               // ULA(1) → bus (int)
 		PC.store();                        // PC ← bus(int)
 		ula.internalStore(0);              // ULA(0) ← bus(int)
 		ula.read(0);                       // ULA(0) → bus(ext)
-		memory.read();                     // Mem(r) ← bus(ext) 
+		memory.read();                     // Mem(r) ← bus(ext)
 		ula.store(0);                      // ULA(0) ← bus(ext)
-		ula.internalRead(0);               // ULA(0) → bus(int) 
+		ula.internalRead(0);               // ULA(0) → bus(int)
 		demux.setValue(intBus.get());      // RegID ← bus(int)
 		registersRead();                   // Reg(x) → bus (int) (demux)
 		ula.internalStore(1);              // ULA(1) ← bus (int)
@@ -379,33 +381,33 @@ public class Architecture {
 		PC.store();                    // PC ← bus(int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.read(0);                   // ULA(0) → bus(ext)
-		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext)
 		ula.store(0);                  // ULA(0) ← bus(ext)
-		ula.internalRead(0);           // ULA(0) → bus(int) 
+		ula.internalRead(0);           // ULA(0) → bus(int)
 		demux.setValue(intBus.get());  // RegID ← bus(int)
 		registersRead();               // Reg(x) → bus (int) (demux)
 		IR.store();                    // IR ← bus(int)
-		PC.read();                     // PC → bus(int)    
+		PC.read();                     // PC → bus(int)
 		ula.internalStore(1);          // ULA(1) ← bus(int)
 		ula.inc();                     // ULA++
 		ula.internalRead(1);           // ULA(1) → bus (int)
 		PC.store();                    // PC ← bus(int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.read(0);                   // ULA(0) → bus(ext)
-		memory.read();                 // Mem(r) ← bus(ext) 
-		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
 		ula.store(1);                  // ULA(1) ← bus(ext)
-		PC.read();                     // PC → bus(int)    
+		PC.read();                     // PC → bus(int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.read(0);                   // ULA(0) → bus(ext)
-		memory.read();                 // Mem(r) ← bus(ext) 
-		memory.store();                // Mem(store) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext)
+		memory.store();                // Mem(store) ← bus(ext)
 		IR.read();                     // IR → bus (int)
 		ula.internalStore(0);          // ULA(0) ← bus(int)
 		ula.sub();                     // ULA-
 		ula.read(1);                   // ULA(1) → bus (ext)
 		setStatusFlags(intBus.get());  // Flags
-		memory.store();                // Mem(store) ← bus(ext) 
+		memory.store();                // Mem(store) ← bus(ext)
 		PC.read();                     // PC → bus(int)
 		ula.internalStore(1);          // ULA(1) ← bus(int)
 		ula.inc();                     // ULA++

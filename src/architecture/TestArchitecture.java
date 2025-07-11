@@ -189,6 +189,139 @@ public class TestArchitecture {
 		assertEquals(20, arch.tGetMemory().getDataList()[150]);
 	}
 
+	@Test
+	public void testMoveMemReg() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.MOVE_MEM_REG.toInt(), 150, 1,
+		});
+		arch.tGetMemory().getDataList()[150] = 15;
+		arch.controlUnitCycle();
+		assertEquals(15, arch.tGetREG0().getData());
+	}
+
+	@Test
+	public void testMoveRegMem() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.MOVE_REG_MEM.toInt(), 1, 80,
+		});
+		arch.tGetIntBus().put(125);
+		arch.tGetREG0().store();
+		arch.controlUnitCycle();
+		assertEquals(125, arch.tGetMemory().getDataList()[80]);
+	}
+
+	@Test
+	public void testMoveRegReg() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.MOVE_REG_REG.toInt(), 1, 2,
+		});
+		arch.tGetIntBus().put(125);
+		arch.tGetREG0().store();
+		arch.controlUnitCycle();
+		assertEquals(125, arch.tGetREG1().getData());
+	}
+
+	@Test
+	public void testMoveImmReg() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.MOVE_IMM_REG.toInt(), 35, 2,
+		});
+		arch.controlUnitCycle();
+		assertEquals(35, arch.tGetREG1().getData());
+	}
+
+	@Test
+	public void testIncReg() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.INC_REG.toInt(), 1,
+		});
+		arch.tGetIntBus().put(125);
+		arch.tGetREG0().store();
+		arch.controlUnitCycle();
+		assertEquals(126, arch.tGetREG0().getData());
+	}
+
+	@Test
+	public void testIncMem() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.INC_MEM.toInt(), 150,
+		});
+		arch.tGetMemory().getDataList()[150] = 15;
+		arch.controlUnitCycle();
+		assertEquals(16, arch.tGetMemory().getDataList()[150]);
+	}
+
+	@Test
+	public void testJmp() {
+		Architecture arch = makeArchWithProgram(new int[] {
+			CommandID.JMP.toInt(), 100,
+		});
+		arch.controlUnitCycle();
+		assertEquals(100, arch.tGetPC().getData());
+	}
+
+	@Test
+	public void testJn() {
+		Architecture arch;
+
+		// Case 1: simulated negative result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JN.toInt(), 200
+		});
+		arch.setStatusFlags(-5);
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: simulated non-negative result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JN.toInt(), 200,
+		});
+		arch.setStatusFlags(5);
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
+	}
+
+	@Test
+	public void testJz() {
+		Architecture arch;
+
+		// Case 1: simulated zero result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JZ.toInt(), 200
+		});
+		arch.setStatusFlags(0);
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: simulated non-zero result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JZ.toInt(), 200,
+		});
+		arch.setStatusFlags(5);
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
+	}
+
+	@Test
+	public void testJnz() {
+		Architecture arch;
+
+		// Case 1: simulated non-zero result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JNZ.toInt(), 200
+		});
+		arch.setStatusFlags(12);
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: simulated zero result
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JNZ.toInt(), 200,
+		});
+		arch.setStatusFlags(0);
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
+	}
 
 	@Test
 	public void testJeq() {
@@ -296,7 +429,7 @@ public class TestArchitecture {
 		assertEquals(115, arch.tGetPC().getData());
 	}
 
-	
+
 	//@Test
 	//public void testAdd() {
 	//	Architecture arch = new Architecture();
