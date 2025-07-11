@@ -76,6 +76,121 @@ public class TestArchitecture {
 	}
 
 	@Test
+	public void testAdd_rr() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.ADD_REG_REG.toInt(), 1, 2,
+		});
+		arch.tGetIntBus().put(25);
+		arch.tGetREG0().store();
+
+		arch.tGetIntBus().put(10);
+		arch.tGetREG1().store();
+
+		arch.controlUnitCycle();
+		assertEquals(35, arch.tGetREG1().getData());
+	}
+
+	@Test
+	public void testAdd_mr() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.ADD_MEM_REG.toInt(), 150, 1,
+		});
+		arch.tGetIntBus().put(25);
+		arch.tGetREG0().store();
+
+		arch.tGetExtBus().put(150);
+		arch.tGetMemory().store();
+
+		arch.tGetExtBus().put(90);
+		arch.tGetMemory().store();
+
+		arch.controlUnitCycle();
+		assertEquals(115, arch.tGetREG0().getData());
+	}
+
+	@Test
+	public void testAdd_rm() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.ADD_REG_MEM.toInt(), 1, 150,
+		});
+		arch.tGetIntBus().put(30);
+		arch.tGetREG0().store();
+
+		arch.tGetExtBus().put(150);
+		arch.tGetMemory().store();
+
+		arch.tGetExtBus().put(10);
+		arch.tGetMemory().store();
+
+		arch.controlUnitCycle();
+		assertEquals(40, arch.tGetMemory().getDataList()[150]);
+	}
+
+	@Test
+	public void testSub_rr() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.SUB_REG_REG.toInt(), 1, 2,
+		});
+		arch.tGetIntBus().put(25);
+		arch.tGetREG0().store();
+
+		arch.tGetIntBus().put(10);
+		arch.tGetREG1().store();
+
+		arch.controlUnitCycle();
+		assertEquals(15, arch.tGetREG1().getData());
+	}
+
+	@Test
+	public void testSub_mr() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.SUB_MEM_REG.toInt(), 150, 1,
+		});
+		arch.tGetIntBus().put(100);
+		arch.tGetREG0().store();
+
+		arch.tGetExtBus().put(150);
+		arch.tGetMemory().store();
+
+		arch.tGetExtBus().put(10);
+		arch.tGetMemory().store();
+
+		arch.controlUnitCycle();
+		assertEquals(90, arch.tGetREG0().getData());
+	}
+
+	@Test
+	public void testSub_rm() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.SUB_REG_MEM.toInt(), 1, 150,
+		});
+		arch.tGetIntBus().put(30);
+		arch.tGetREG0().store();
+
+		arch.tGetExtBus().put(150);
+		arch.tGetMemory().store();
+
+		arch.tGetExtBus().put(10);
+		arch.tGetMemory().store();
+
+		arch.controlUnitCycle();
+		assertEquals(20, arch.tGetMemory().getDataList()[150]);
+	}
+
+
+	@Test
 	public void testJeq() {
 		Architecture arch;
 
@@ -181,8 +296,7 @@ public class TestArchitecture {
 		assertEquals(115, arch.tGetPC().getData());
 	}
 
-	// TODO: tests for: RET
-
+	
 	//@Test
 	//public void testAdd() {
 	//	Architecture arch = new Architecture();
