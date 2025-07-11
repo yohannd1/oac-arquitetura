@@ -512,7 +512,7 @@ public class Architecture {
 		ula.internalRead(1);
 		PC.store();
 
-		// read regA id from memory and put it on intBus
+		// read regB id from memory and put it on intBus
 		ula.read(1);
 		memory.read();
 		ula.store(0);
@@ -591,7 +591,7 @@ public class Architecture {
 		ula.internalRead(1);
 		PC.store();
 
-		// read regA id from memory and put it on intBus
+		// read regB id from memory and put it on intBus
 		ula.read(1);
 		memory.read();
 		ula.store(0);
@@ -645,33 +645,82 @@ public class Architecture {
 	}
 
 	public void jlw() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regB_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// read regA id from memory and put it on intBus
+		ula.read(1);
+		memory.read();
+		ula.store(0);
+		ula.internalRead(0);
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
+		// get the id and read the specified register's value, then store it into IR
+		demux.setValue(intBus.get());
 		registersRead();
+		IR.store();
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
+
+		// read regB id from memory and put it on intBus
+		ula.read(1);
+		memory.read();
+		ula.store(0);
+		ula.internalRead(0);
+
+		// get the regB id and read the specified register's value, then store it into ula(1)
+		demux.setValue(intBus.get());
+		registersRead();
+		ula.internalStore(1);
+
+		// get regA's value (from IR) and put it into ula(0)
+		IR.read();
+		ula.internalStore(0);
+
+		// perform a subtraction and update the flags register
+		ula.sub();
+		ula.internalRead(1);
+		setStatusFlags(intBus.get());
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
+
+		// get jump address from memory, and put it into ula(0)
+		ula.read(1);
+		memory.read();
 		ula.store(0);
 
-		demux.setValue(regB_id);
-		registersRead();
-		ula.store(1);
+		// put the address in the status memory (slot 0, when regA>regB)
+		ula.internalRead(0);
+		statusMem.storeIn1();
 
-		ula.sub();
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 
-		// FIXME: não podemos usar if aqui!
-		// if (ula.getInternal(1) < 0) {
-		// 	intBus.put(mem_addr);
-		// 	PC.store();
-		// }
+		// put the address of the next instruction in the status memory (slot 1, when regA<=regB)
+		PC.read();
+		statusMem.storeIn0();
+
+		// jump to the address (based on the negative flag)
+		intBus.put(Flags.getBit(1));
+		statusMem.read();
+		PC.store();
 	}
 
 	public void call() {
@@ -842,6 +891,7 @@ public class Architecture {
 		String commandName = (id == null) ? "invalid command, will halt" : id.toString();
 
 		System.out.printf("intBus: %d | extBus: %d\n", intBus.get(), extBus.get());
+		System.out.printf("Status memory: [%d, %d]\n", statusMem.getDataList()[0], statusMem.getDataList()[1]);
 		System.out.printf(
 				"IR: %d (%s) | FLAGS: (Z=%d, N=%d)\n",
 				IR.getData(), commandName, Flags.getBit(0), Flags.getBit(1));

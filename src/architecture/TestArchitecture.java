@@ -118,7 +118,30 @@ public class TestArchitecture {
 		assertNotEquals(200, arch.tGetPC().getData());
 	}
 
-	// TODO: tests for: JGT, JLW, CALL, RET
+	@Test
+	public void testJlw() {
+		Architecture arch;
+
+		// Case 1: REG0 < REG1
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JLW.toInt(), 1, 2, 200,
+		});
+		arch.tGetIntBus().put(5);
+		arch.tGetREG0().store();
+		arch.tGetIntBus().put(30);
+		arch.tGetREG1().store();
+		arch.controlUnitCycle();
+		assertEquals(200, arch.tGetPC().getData());
+
+		// Case 2: REG0 = REG1 = 0
+		arch = makeArchWithProgram(new int[] {
+			CommandID.JLW.toInt(), 1, 2, 200,
+		});
+		arch.controlUnitCycle();
+		assertNotEquals(200, arch.tGetPC().getData());
+	}
+
+	// TODO: tests for: CALL, RET
 
 	//@Test
 	//public void testAdd() {
