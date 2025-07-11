@@ -78,7 +78,9 @@ public class Architecture {
 
 	private Register PC;
 	private Register IR;
-	private Register SP;
+	private Register SP; // FIXME: remover esse (não tem na arquitetura)
+	private Register StkTOP;
+	private Register StkBOT;
 	private Register Flags;
 	private Register REG0;
 	private Register REG1;
@@ -119,8 +121,10 @@ public class Architecture {
 
 		PC = new Register("PC", intBus, intBus);
 		IR = new Register("IR", intBus, intBus);
-		SP = new Register("SP", intBus, intBus); // TODO: adicionar StkTOP e StkBOT (não SP)
-		// SP.setData(MAIN_MEMORY_SIZE); // FIXME: não precisa inicializar SP aqui - o programa é responsável de fazer isso
+		SP = new Register("SP", intBus, intBus); // FIXME: remover (não tem na arquitetura)
+		StkTOP = new Register("StkTOP", intBus, intBus);
+		StkBOT = new Register("StkBOT", intBus, intBus);
+
 		Flags = new Register(2, intBus);
 
 		REG0 = new Register("REG0", intBus, intBus);
@@ -128,7 +132,7 @@ public class Architecture {
 		REG2 = new Register("REG2", intBus, intBus);
 		REG3 = new Register("REG3", intBus, intBus);
 
-		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP, Flags };
+		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP, StkTOP, StkBOT, Flags };
 		ula = new Ula(extBus, intBus);
 		demux = new Demux();
 	}
@@ -724,28 +728,74 @@ public class Architecture {
 	}
 
 	public void call() {
-		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		int jumpAddress = intBus.get();
+		// decrement stktop
+		StkTOP.read();
+		ula.internalStore(0);
+		intBus.put(-1);
+		ula.internalStore(1);
+		ula.add();
+		ula.internalRead(1);
+		StkTOP.store();
 
-		int returnAddress = PC.getData();
-
-		SP.read();
-		ula.store(0);
-		// ula.dec(); // FIXME: a ULA não tem dec. talvez ler um -1 da memória e somar?
-		ula.read(0);
-		SP.store();
-
-		SP.read();
-		intBus.put(SP.getData());
-		extBus.put(intBus.get());
-		memory.store();
-
-		intBus.put(returnAddress);
-		extBus.put(intBus.get());
-		memory.store();
-
-		intBus.put(jumpAddress);
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
 		PC.store();
+
+		// get jump address from memory, store it into IR
+		ula.read(1);
+		memory.read();
+		ula.store(1);
+		ula.internalRead(1);
+		IR.store();
+
+		// send address in stktop to memory
+		StkTOP.read();
+		ula.internalStore(0);
+		ula.read(0);
+		memory.store();
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
+
+		// send address in pc to memory (and thus memory[stktop] <- pc)
+		PC.read();
+		ula.internalStore(0);
+		ula.read(0);
+		memory.store();
+
+		// put the address from IR into PC
+		IR.read();
+		PC.store();
+
+		// PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
+		// int jumpAddress = intBus.get();
+
+		// int returnAddress = PC.getData();
+
+		// SP.read();
+		// ula.store(0);
+		// // ula.dec(); // FIXME: a ULA não tem dec. talvez ler um -1 da memória e somar?
+		// ula.read(0);
+		// SP.store();
+
+		// SP.read();
+		// intBus.put(SP.getData());
+		// extBus.put(intBus.get());
+		// memory.store();
+
+		// intBus.put(returnAddress);
+		// extBus.put(intBus.get());
+		// memory.store();
+
+		// intBus.put(jumpAddress);
+		// PC.store();
 	}
 
 	public void ret() {
@@ -962,6 +1012,8 @@ public class Architecture {
 	public Memory tGetStatusMem() { return statusMem; }
 	public Register tGetPC() { return PC; }
 	public Register tGetIR() { return IR; }
+	public Register tGetStkTOP() { return StkTOP; }
+	public Register tGetStkBOT() { return StkBOT; }
 	public Register tGetSP() { return SP; }
 	public Register tGetFlags() { return Flags; }
 	public Register tGetREG0() { return REG0; }

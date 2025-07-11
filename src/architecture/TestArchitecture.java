@@ -141,7 +141,26 @@ public class TestArchitecture {
 		assertNotEquals(200, arch.tGetPC().getData());
 	}
 
-	// TODO: tests for: CALL, RET
+	@Test
+	public void testCall() {
+		Architecture arch;
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.CALL.toInt(), 100,
+		});
+		arch.tGetIntBus().put(200);
+		arch.tGetStkBOT().store();
+		arch.tGetStkTOP().store();
+		arch.controlUnitCycle();
+
+		assertEquals(199, arch.tGetStkTOP().getData());
+		assertEquals(100, arch.tGetPC().getData());
+		arch.tGetExtBus().put(199);
+		arch.tGetMemory().read();
+		assertEquals(2, arch.tGetExtBus().get());
+	}
+
+	// TODO: tests for: RET
 
 	//@Test
 	//public void testAdd() {
