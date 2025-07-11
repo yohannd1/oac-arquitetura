@@ -170,7 +170,7 @@ public class Architecture {
 		registerList[demux.getValue()].internalStore();
 	}
 
-	public void add_rr(){
+	public void add_rr(){			   // RegB <- RegA + RegB
 		PC.read();                     // PC -> bus(int)
 		ula.internalStore(1);          // ULA(1) <- bus(int)
 		ula.inc();                     // ULA++
@@ -210,176 +210,207 @@ public class Architecture {
 		PC.store();                    // PC <- bus(int)
 	}
 
-	/*public void add_rr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regB_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(0);
-
-		demux.setValue(regB_id);
-		registersRead();
-		ula.store(1);
-
-		ula.add();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		demux.setValue(regB_id);
-		registersStore();
-	}*/
-
-	public void add_mr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		ula.store(0);
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(1);
-
-		ula.add();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		demux.setValue(regA_id);
-		registersStore();
+	public void add_mr() {			   //RegA <- memória[mem] + RegA
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext) 
+		ula.store(0);                  // ULA(0) ← bus(ext)
+		ula.internalRead(0);           // ULA(0) → bus(int) 
+		IR.store();                    // IR ← bus(int)
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext) 
+		ula.store(0);                  // ULA(0) ← bus(ext)
+		ula.internalRead(0);           // ULA(0) → bus(int) 
+		demux.setValue(intBus.get());  // RegID ← bus(int)
+		registersRead();               // Reg(x) → bus (int) (demux)
+		ula.internalStore(1);          // ULA(1) ← bus (int)
+		IR.read();                     // IR → bus (int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.add();                     // ULA+
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		setStatusFlags(intBus.get());  // Flags
+		registersStore();              // RegX ← bus (int)
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
 	}
 
-	public void add_rm() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(0);
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		ula.store(1);
-
-		ula.add();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-		memory.store();
-
-		ula.read(1);
-		extBus.put(intBus.get());
-		memory.store();
+	public void add_rm() {			   // Memória[mem] <- RegA + memória[mem]	
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
+		ula.store(0);                  // ULA(0) ← bus(ext)
+		ula.internalRead(0);           // ULA(0) → bus(int)
+		demux.setValue(intBus.get());  // RegID ← bus(int)
+		registersRead();               // Reg(x) → bus (int) (demux)
+		IR.store();                    // IR ← bus(int)
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
+		ula.store(1);                  // ULA(1) ← bus(ext)
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext)
+		memory.store();                // Mem(store) ← bus(ext)
+		IR.read();                     // IR → bus (int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.add();                     // ULA+
+		ula.read(1);                   // ULA(1) → bus (ext)
+		setStatusFlags(intBus.get());  // Flags
+		memory.store();                // Mem(store) ← bus(ext)
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
 	}
 
-	public void sub_rr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regB_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(0);
-
-		demux.setValue(regB_id);
-		registersRead();
-		ula.store(1);
-
-		ula.sub();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		demux.setValue(regB_id);
-		registersStore();
+	public void sub_rr() {				   // RegB <- RegA - RegB
+		PC.read();                         // PC → bus(int)
+		ula.internalStore(1);              // ULA(1) ← bus(int)
+		ula.inc();                         // ULA++
+		ula.internalRead(1);               // ULA(1) → bus (int)
+		PC.store();                        // PC ← bus(int)
+		ula.internalStore(0);              // ULA(0) ← bus(int)
+		ula.read(0);                       // ULA(0) → bus(ext)
+		memory.read();                     // Mem(r) ← bus(ext) 
+		ula.store(0);                      // ULA(0) ← bus(ext)
+		ula.internalRead(0);               // ULA(0) → bus(int) 
+		demux.setValue(intBus.get());      // RegID ← bus(int)
+		registersRead();                   // Reg(x) → bus(int) (demux)
+		IR.store();                        // IR ← bus(int)
+		PC.read();                         // PC → bus(int)    
+		ula.internalStore(1);              // ULA(1) ← bus(int)
+		ula.inc();                         // ULA++
+		ula.internalRead(1);               // ULA(1) → bus (int)
+		PC.store();                        // PC ← bus(int)
+		ula.internalStore(0);              // ULA(0) ← bus(int)
+		ula.read(0);                       // ULA(0) → bus(ext)
+		memory.read();                     // Mem(r) ← bus(ext) 
+		ula.store(0);                      // ULA(0) ← bus(ext)
+		ula.internalRead(0);               // ULA(0) → bus(int) 
+		demux.setValue(intBus.get());      // RegID ← bus(int)
+		registersRead();                   // Reg(x) → bus (int) (demux)
+		ula.internalStore(1);              // ULA(1) ← bus (int)
+		IR.read();                         // IR → bus (int)
+		ula.internalStore(0);              // ULA(0) ← bus(int)
+		ula.sub();                         // ULA-
+		ula.internalRead(1);               // ULA(1) → bus (int)
+		setStatusFlags(intBus.get());      // Flags
+		registersStore();                  // RegX ← bus (int)
+		PC.read();                         // PC → bus(int)
+		ula.internalStore(1);              // ULA(1) ← bus(int)
+		ula.inc();                         // ULA++
+		ula.internalRead(1);               // ULA(1) → bus (int)
+		PC.store();                        // PC ← bus(int)
 	}
 
-	public void sub_mr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		ula.store(0);
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(1);
-
-		ula.sub();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		demux.setValue(regA_id);
-		registersStore();
+	public void sub_mr() { 			  // RegA <- memória[mem] - RegA
+		PC.read();                    // PC → bus(int)
+		ula.internalStore(1);         // ULA(1) ← bus(int)
+		ula.inc();                    // ULA++
+		ula.internalRead(1);          // ULA(1) → bus (int)
+		PC.store();                   // PC ← bus(int)
+		ula.internalStore(0);         // ULA(0) ← bus(int)
+		ula.read(0);                  // ULA(0) → bus(ext)
+		memory.read();                // Mem(r) ← bus(ext)
+		memory.read();                // Mem(r) ← bus(ext)
+		ula.store(0);                 // ULA(0) ← bus(ext)
+		ula.internalRead(0);          // ULA(0) → bus(int)
+		IR.store();                   // IR ← bus(int)
+		PC.read();                    // PC → bus(int)
+		ula.internalStore(1);         // ULA(1) ← bus(int)
+		ula.inc();                    // ULA++
+		ula.internalRead(1);          // ULA(1) → bus (int)
+		PC.store();                   // PC ← bus(int)
+		ula.internalStore(0);         // ULA(0) ← bus(int)
+		ula.read(0);                  // ULA(0) → bus(ext)
+		memory.read();                // Mem(r) ← bus(ext)
+		ula.store(0);                 // ULA(0) ← bus(ext)
+		ula.internalRead(0);          // ULA(0) → bus(int)
+		demux.setValue(intBus.get()); // RegID ← bus(int)
+		registersRead();              // Reg(x) → bus (int) (demux)
+		ula.internalStore(1);         // ULA(1) ← bus (int)
+		IR.read();                    // IR → bus (int)
+		ula.internalStore(0);         // ULA(0) ← bus(int)
+		ula.sub();                    // ULA-
+		ula.internalRead(1);          // ULA(1) → bus (int)
+		setStatusFlags(intBus.get()); // Flags
+		registersStore();             // RegX ← bus (int)
+		PC.read();                    // PC → bus(int)
+		ula.internalStore(1);         // ULA(1) ← bus(int)
+		ula.inc();                    // ULA++
+		ula.internalRead(1);          // ULA(1) → bus (int)
+		PC.store();                   // PC ← bus(int)
 	}
 
-	public void sub_rm() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(0);
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		ula.store(1);
-
-		ula.sub();
-		ula.read(1);
-		setStatusFlags(intBus.get());
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-		memory.store();
-
-		ula.read(1);
-		extBus.put(intBus.get());
-		memory.store();
+	public void sub_rm() {			   // memória[mem] <- RegA - memória[mem]
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext) 
+		ula.store(0);                  // ULA(0) ← bus(ext)
+		ula.internalRead(0);           // ULA(0) → bus(int) 
+		demux.setValue(intBus.get());  // RegID ← bus(int)
+		registersRead();               // Reg(x) → bus (int) (demux)
+		IR.store();                    // IR ← bus(int)
+		PC.read();                     // PC → bus(int)    
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.read();                 // Mem(r) ← bus(ext) 
+		ula.store(1);                  // ULA(1) ← bus(ext)
+		PC.read();                     // PC → bus(int)    
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.read(0);                   // ULA(0) → bus(ext)
+		memory.read();                 // Mem(r) ← bus(ext) 
+		memory.store();                // Mem(store) ← bus(ext) 
+		IR.read();                     // IR → bus (int)
+		ula.internalStore(0);          // ULA(0) ← bus(int)
+		ula.sub();                     // ULA-
+		ula.read(1);                   // ULA(1) → bus (ext)
+		setStatusFlags(intBus.get());  // Flags
+		memory.store();                // Mem(store) ← bus(ext) 
+		PC.read();                     // PC → bus(int)
+		ula.internalStore(1);          // ULA(1) ← bus(int)
+		ula.inc();                     // ULA++
+		ula.internalRead(1);           // ULA(1) → bus (int)
+		PC.store();                    // PC ← bus(int)
 	}
 
 	public void move_mr() {

@@ -156,13 +156,13 @@ public class TestArchitecture {
 		arch = makeArchWithProgram(new int[] {
 			CommandID.SUB_MEM_REG.toInt(), 150, 1,
 		});
-		arch.tGetIntBus().put(100);
+		arch.tGetIntBus().put(10);
 		arch.tGetREG0().store();
 
 		arch.tGetExtBus().put(150);
 		arch.tGetMemory().store();
 
-		arch.tGetExtBus().put(10);
+		arch.tGetExtBus().put(100);
 		arch.tGetMemory().store();
 
 		arch.controlUnitCycle();
