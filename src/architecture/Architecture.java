@@ -728,11 +728,16 @@ public class Architecture {
 	}
 
 	public void call() {
+		// put a -1 on ula(1)
+		REG0.read();
+		ula.internalStore(0);
+		ula.internalStore(1);
+		ula.inc();
+		ula.sub();
+
 		// decrement stktop
 		StkTOP.read();
 		ula.internalStore(0);
-		intBus.put(-1);
-		ula.internalStore(1);
 		ula.add();
 		ula.internalRead(1);
 		StkTOP.store();
