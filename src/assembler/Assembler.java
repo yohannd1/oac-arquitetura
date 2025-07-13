@@ -111,7 +111,6 @@ public class Assembler {
 				// skip empty line
 				i++;
 			} else if ((varName = Parser.parseVariableDecl(currentLine)) != null) {
-				System.err.println("Got VARIABLE " + varName);
 				// this line is a variable declaration
 				variables.add(varName);
 				i++;
@@ -131,14 +130,11 @@ public class Assembler {
 				i++;
 			} else if ((labelName = Parser.parseLabelDecl(currentLine)) != null) {
 				// this line is a label declaration
-				System.err.printf("Got label '%s', addr=%d\n", labelName, objProgram.size());
 				labels.add(labelName);
 				labelsAdresses.add(objProgram.size());
 				i++;
 			} else if ((command = Parser.parseCommand(currentLine.split(" "))) != null) {
 				// this line is a command
-				System.err.println("Got " + command);
-
 				objProgram.add(Integer.toString(command.id.toInt()));
 				for (String arg : command.args) {
 					if (!arg.isEmpty())
@@ -152,6 +148,31 @@ public class Assembler {
 		}
 	}
 
+	public void buildExecutable() {
+		checkProperDeclaration();
+
+		int stackBottom = arch.getMemorySize() - variables.size();
+		for (String rn : new String[] { "StkBOT", "StkTOP" }) {
+			int rid = arch.getRegisterID(rn);
+			if (rid < 0)
+				throw new RuntimeException(String.format("Could not find register with name '%s'\n", rn));
+
+			execProgram.add(Integer.toString(CommandID.MOVE_IMM_REG.toInt()));
+			execProgram.add(Integer.toString(stackBottom));
+			execProgram.add(Integer.toString(rid));
+		}
+
+		// allocate memory space to store program and variables,
+		// and copy the object program data over there
+		execProgram = new ArrayList<>();
+		for (String s : objProgram)
+			execProgram.add(s);
+
+		replaceAllVariables();
+		replaceLabels();
+		replaceRegisters();
+	}
+
 	/**
 	 * Create the executable program from the object program.
 	 *
@@ -159,20 +180,7 @@ public class Assembler {
 	 * @throws IOException
 	 */
 	public void makeExecutable(String filename) throws IOException {
-		if (!checkProperDeclaration())
-			return;
-
-		// allocate memory space to store program and variables,
-		// and copy the object program data over there
-		execProgram = new ArrayList<>();
-		for (String s : objProgram)
-			execProgram.add(s);
-
-		replaceAllVariables();
-		replaceLabels();
-		replaceRegisters();
-
-		// save to file
+		buildExecutable();
 		saveExecFile(filename);
 	}
 
@@ -180,19 +188,7 @@ public class Assembler {
 	 * Create the executable program from the object program, and return its lines.
 	 */
 	public String[] makeExecutableLines() {
-		if (!checkProperDeclaration())
-			return null;
-
-		// allocate memory space to store program and variables,
-		// and copy the object program data over there
-		execProgram = new ArrayList<>();
-		for (String s : objProgram)
-			execProgram.add(s);
-
-		replaceAllVariables();
-		replaceLabels();
-		replaceRegisters();
-
+		buildExecutable();
 		String[] ret = new String[execProgram.size()];
 		for (int i = 0; i < execProgram.size(); i++)
 			ret[i] = execProgram.get(i);
@@ -208,8 +204,11 @@ public class Assembler {
 		for (String line : execProgram) {
 			// A % on the start of the line indicates a register name
 			if (line.startsWith("%")) {
-				int regId = searchRegisterId(line.substring(1, line.length()));
-				String newLine = Integer.toString(regId);
+				String regName = line.substring(1, line.length());
+				int regID = arch.getRegisterID(regName);
+				if (regID < 0)
+					throw new RuntimeException("Could not find register with name " + regName);
+				String newLine = Integer.toString(regID);
 				execProgram.set(p, newLine);
 			}
 			p++;
@@ -289,35 +288,15 @@ public class Assembler {
 	 *
 	 * The `labels` and `variables` collections are used for this.
 	 */
-	protected boolean checkProperDeclaration() {
-		System.err.println("Checking labels and variables");
-		System.out.println(labels);
+	protected void checkProperDeclaration() {
 		for (String line : objProgram) {
 			boolean found = false;
 			if (line.startsWith("&")) { // if starts with "&", it is a label or a variable
 				line = line.substring(1, line.length());
-				if (!labels.contains(line) && !variables.contains(line)) {
-					System.err.printf("FATAL ERROR! Variable or label '%s' not declared!\n", line);
-					return false;
-				}
+				if (!labels.contains(line) && !variables.contains(line))
+					throw new RuntimeException(String.format("variable or label '%s' not declared!\n", line));
 			}
 		}
-		return true;
-	}
-
-	/**
-	 * Search for a register in the architecture's register list by its name.
-	 *
-	 * @return register id (>= 0) on success, -1 on failure
-	 */
-	private int searchRegisterId(String line) {
-		int i = 0;
-		for (Register r : arch.registerList) {
-			if (line.equals(r.getRegisterName()))
-				return i;
-			i++;
-		}
-		return -1;
 	}
 
 	/**
@@ -447,17 +426,14 @@ public class Assembler {
 				if (sig.equals("mem")) {
 					if (!isMemName(token))
 						return null;
-					System.out.printf("GOT MEM %s\n", token);
 					args[i - 1] = "&" + token;
 				} else if (sig.equals("reg")) {
 					if (!isRegName(token))
 						return null;
-					System.out.printf("GOT REG %s\n", token);
 					args[i - 1] = token;
 				} else if (sig.equals("imm")) {
 					if (!isNumber(token))
 						return null;
-					System.out.printf("GOT IMM %s\n", token);
 					args[i - 1] = token;
 				} else {
 					throw new ParseException(
@@ -520,6 +496,21 @@ public class Assembler {
 			sb.append(", ");
 		}
 		sb.append(arr[arr.length - 1].toString());
+		sb.append("]");
+		return sb.toString();
+	}
+
+	private static <T> String arrayListToString(ArrayList<T> arr) {
+		if (arr.size() == 0)
+			return "[]";
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < arr.size() - 1; i++) {
+			sb.append(arr.get(i).toString());
+			sb.append(", ");
+		}
+		sb.append(arr.get(arr.size() - 1).toString());
 		sb.append("]");
 		return sb.toString();
 	}

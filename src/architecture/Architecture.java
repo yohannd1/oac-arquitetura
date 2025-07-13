@@ -114,6 +114,14 @@ public class Architecture {
 	 */
 	private Demux demux;
 
+	public int getRegisterID(String name) {
+		for (int i = 0; i < registerList.length; i++) {
+			if (registerList[i].getRegisterName().toLowerCase().equals(name.toLowerCase()))
+				return i;
+		}
+		return -1;
+	}
+
 	private void componentsInstances() {
 		intBus = new Bus();
 		extBus = new Bus();
@@ -884,19 +892,19 @@ public class Architecture {
 	}
 
 	public void readExec(String filename) throws IOException {
-		   BufferedReader br = new BufferedReader(new FileReader(filename+".dxf"));
-		   String linha;
-		   int i=0;
-		   while ((linha = br.readLine()) != null) {
-			     intBus.put(i);
-			     extBus.put(intBus.get());
-			     memory.store();
-			   	 intBus.put(Integer.parseInt(linha));
-			     extBus.put(intBus.get());
-			     memory.store();
-			     i++;
-			}
-			br.close();
+		BufferedReader br = new BufferedReader(new FileReader(filename + ".dxf"));
+		String linha;
+		int i=0;
+		while ((linha = br.readLine()) != null) {
+			intBus.put(i);
+			extBus.put(intBus.get());
+			memory.store();
+			intBus.put(Integer.parseInt(linha));
+			extBus.put(intBus.get());
+			memory.store();
+			i++;
+		}
+		br.close();
 	}
 
 	public void readExecLines(String[] lines) {
@@ -919,7 +927,8 @@ public class Architecture {
 	public void controlUnitEexec() {
 		while (!halt)
 			controlUnitCycle();
-		System.out.println("--- EXECUTION HALTED ---");
+		if (simulation)
+			System.out.println("--- EXECUTION HALTED ---");
 	}
 
 	public void controlUnitCycle() {
@@ -998,13 +1007,6 @@ public class Architecture {
 			simulationFetch();
 	}
 
-	private boolean hasOperands(String instruction) {
-		if ("inc".equals(instruction))
-			return false;
-		else
-			return true;
-	}
-
 	private void simulationPrintState() {
 		CommandID id = CommandID.fromInt(IR.getData());
 		String commandName = (id == null) ? "invalid command, will halt" : id.toString();
@@ -1046,10 +1048,6 @@ public class Architecture {
 	}
 
 	private void simulationFetch() {
-		for (int i = PC.getData(); i < PC.getData() + 12; i++)
-			System.out.printf("%d ", memory.getDataList()[i]);
-		System.out.println();
-
 		if (simulation) {
 			System.out.println("--- AFTER FETCH ---");
 			simulationPrintState();
