@@ -484,19 +484,31 @@ public class Architecture {
 	}
 
 	public void inc_r() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		demux.setValue(regA_id);
-		registersRead();
-		ula.store(0);
+		PC.read();
+		ula.internalStore(1);
 		ula.inc();
-		ula.read(0);
-		setStatusFlags(intBus.get());
+		ula.internalRead(1);
+		PC.store();
 
-		demux.setValue(regA_id);
+		ula.internalStore(0);
+		ula.read(0);
+		memory.read();
+		ula.store(0);
+		ula.internalRead(0);
+		demux.setValue(intBus.get());
+		registersRead();
+
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		setStatusFlags(intBus.get());
 		registersStore();
+
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 	}
 
 	public void inc_m() {
