@@ -520,26 +520,41 @@ public class Architecture {
 	}
 
 	public void inc_m() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
-
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
-		ula.store(0);
+		// pc++
+		PC.read();
+		ula.internalStore(1);
 		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-		memory.store();
-
+		// ir <- m[m[pc]] (double-dereference)
+		ula.internalStore(0);
 		ula.read(0);
+		memory.read();     // primeiro lê o ponteiro em M[PC]
+		memory.read();     // depois lê o valor em M[pointer]
+		ula.store(1);
+		ula.inc();
+		ula.internalRead(1);
 		setStatusFlags(intBus.get());
-		extBus.put(intBus.get());
+		IR.store();
+
+		// m[m[pc]] <- valor
+		PC.read();
+		ula.internalStore(0);
+		ula.read(0);
+		memory.read();
 		memory.store();
+		IR.read();
+		ula.internalStore(0);
+		ula.read(0);
+		memory.store();
+
+		// pc++
+		PC.read();
+		ula.internalStore(1);
+		ula.inc();
+		ula.internalRead(1);
+		PC.store();
 	}
 
 	public void jmp() {
