@@ -143,7 +143,7 @@ public class Assembler {
 
 				i++;
 			} else {
-				throw new ParseException("Could not parse line " + (i + 1) + ": " + currentLine);
+				throw new ParseException("could not parse line " + (i + 1) + ": " + currentLine);
 			}
 		}
 	}
@@ -155,7 +155,7 @@ public class Assembler {
 		for (String rn : new String[] { "StkBOT", "StkTOP" }) {
 			int rid = arch.getRegisterID(rn);
 			if (rid < 0)
-				throw new RuntimeException(String.format("Could not find register with name '%s'\n", rn));
+				throw new RuntimeException(String.format("could not find register with name '%s'\n", rn));
 
 			execProgram.add(Integer.toString(CommandID.MOVE_IMM_REG.toInt()));
 			execProgram.add(Integer.toString(stackBottom));
@@ -207,7 +207,7 @@ public class Assembler {
 				String regName = line.substring(1, line.length());
 				int regID = arch.getRegisterID(regName);
 				if (regID < 0)
-					throw new RuntimeException("Could not find register with name " + regName);
+					throw new RuntimeException("could not find register with name " + regName);
 				String newLine = Integer.toString(regID);
 				execProgram.set(p, newLine);
 			}
@@ -396,7 +396,7 @@ public class Assembler {
 				new CmdMatch(CommandID.JGT, "jgt", arg_rrm),
 				new CmdMatch(CommandID.JLW, "jlw", arg_rrm),
 				new CmdMatch(CommandID.CALL, "call", arg_m),
-				new CmdMatch(CommandID.RET, "re", new String[] {}),
+				new CmdMatch(CommandID.RET, "ret", new String[] {}),
 			};
 		}
 
