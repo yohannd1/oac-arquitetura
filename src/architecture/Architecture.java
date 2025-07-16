@@ -78,7 +78,6 @@ public class Architecture {
 
 	private Register PC;
 	private Register IR;
-	private Register SP; // FIXME: remover esse (não tem na arquitetura)
 	private Register StkTOP;
 	private Register StkBOT;
 	private Register Flags;
@@ -131,7 +130,6 @@ public class Architecture {
 
 		PC = new Register("PC", intBus, intBus);
 		IR = new Register("IR", intBus, intBus);
-		SP = new Register("SP", intBus, intBus); // FIXME: remover (não tem na arquitetura)
 		StkTOP = new Register("StkTOP", intBus, intBus);
 		StkBOT = new Register("StkBOT", intBus, intBus);
 
@@ -142,7 +140,7 @@ public class Architecture {
 		REG2 = new Register("REG2", intBus, intBus);
 		REG3 = new Register("REG3", intBus, intBus);
 
-		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, SP, StkTOP, StkBOT, Flags };
+		registerList = new Register[] { IR, REG0, REG1, REG2, REG3, PC, StkTOP, StkBOT, Flags };
 		ula = new Ula(extBus, intBus);
 		demux = new Demux();
 	}
@@ -1286,7 +1284,6 @@ public class Architecture {
 	public Register tGetIR() { return IR; }
 	public Register tGetStkTOP() { return StkTOP; }
 	public Register tGetStkBOT() { return StkBOT; }
-	public Register tGetSP() { return SP; }
 	public Register tGetFlags() { return Flags; }
 	public Register tGetREG0() { return REG0; }
 	public Register tGetREG1() { return REG1; }
