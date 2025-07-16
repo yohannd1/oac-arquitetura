@@ -13,6 +13,10 @@ import assembler.Assembler.ParseException;
 
 public class TestAll {
 	static private Architecture runCode(String[] codeLines) {
+		return runCode(codeLines, false);
+	}
+
+	static private Architecture runCode(String[] codeLines, boolean sim) {
 		Assembler assembler = new Assembler();
 
 		try {
@@ -24,30 +28,31 @@ public class TestAll {
 
 		String[] executable = assembler.makeExecutableLines();
 
-		Architecture architecture = new Architecture(false);
+		if (sim)
+			System.out.printf("Program: %s\n", arrayToString(executable));
+
+		Architecture architecture = new Architecture(sim);
 		architecture.readExecLines(executable);
 		architecture.controlUnitEexec();
 		return architecture;
 	}
 
 	static private Architecture runFile(String path) {
-		Assembler assembler = new Assembler();
-
 		try {
+			Assembler assembler = new Assembler();
 			assembler.read(path);
 			assembler.parseAll();
+			assembler.makeExecutable(path);
+
+			Architecture architecture = new Architecture(false);
+			architecture.readExec(path);
+			architecture.controlUnitEexec();
+			return architecture;
 		} catch (ParseException ex) {
 			throw new RuntimeException("Failed to run assembler: " + ex);
 		} catch (IOException ex) {
 			throw new RuntimeException("Failed to load file: " + ex);
 		}
-
-		String[] executable = assembler.makeExecutableLines();
-
-		Architecture architecture = new Architecture(false);
-		architecture.readExecLines(executable);
-		architecture.controlUnitEexec();
-		return architecture;
 	}
 
 	@Test
@@ -74,5 +79,20 @@ public class TestAll {
 	public void testCall() {
 		Architecture arch = runFile("examples/ex03-call");
 		assertEquals(11, arch.tGetREG0().getData());
+	}
+
+	private static <T> String arrayToString(T[] arr) {
+		if (arr.length == 0)
+			return "[]";
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < arr.length - 1; i++) {
+			sb.append(arr[i].toString());
+			sb.append(", ");
+		}
+		sb.append(arr[arr.length - 1].toString());
+		sb.append("]");
+		return sb.toString();
 	}
 }

@@ -30,15 +30,16 @@ public class TestAssembler {
 	static private void compileAndExpectStarts(String[] codeLines, int[] expectedStart, int skipN) {
 		String[] exec = assembleCode(codeLines);
 
-		if (exec.length - skipN < expectedStart.length)
+		if (exec.length - skipN < expectedStart.length) {
 			throw new RuntimeException("expected start does not match (it's longer than the input)");
+		}
 
 		for (int i = 0; i < expectedStart.length; i++) {
 			String execVal = exec[i + skipN];
 			String expectedVal = Integer.toString(expectedStart[i]);
 
 			if (!exec[i + skipN].equals(expectedVal))
-				throw new RuntimeException(String.format("(at #%d) expected:<%s> but was:<%s>", i, exec[i], expectedVal));
+				throw new RuntimeException(String.format("(at #%d) expected:<%s> but was:<%s>", i, expectedVal, execVal));
 		}
 	}
 
@@ -67,14 +68,14 @@ public class TestAssembler {
 		});
 	}
 
-	static private int minimumLength = assembleCode(new String[] {}).length;
+	static private int minimumLength = assembleCode(new String[] {}).length - 1;
 
 	@Test
 	public void testSimpleCode() {
 		String[] program = new String[] {
 			"move 135 %reg0",
 		};
-		int[] bytes = new int[] { 9, 135, 1 };
+		int[] bytes = new int[] { 9, 135, 1, -1 };
 		compileAndExpectStarts(program, bytes, minimumLength);
 	}
 
@@ -84,7 +85,7 @@ public class TestAssembler {
 			"var1",
 			"move %reg0 var1",
 		};
-		int[] bytes = new int[] { 7, 1, 255 };
+		int[] bytes = new int[] { 7, 1, 255, -1 };
 		compileAndExpectStarts(program, bytes, minimumLength);
 	}
 
@@ -96,8 +97,23 @@ public class TestAssembler {
 			"b:",
 			"move 5 %reg0",
 		};
-		int[] bytes = new int[] { 12, 5, 9, 5, 1, 9, 5, 1 };
+		int[] bytes = new int[] { 12, 11, 9, 5, 1, 9, 5, 1 };
 		compileAndExpectStarts(program, bytes, minimumLength);
+	}
+
+	private static <T> String arrayToString(T[] arr) {
+		if (arr.length == 0)
+			return "[]";
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int i = 0; i < arr.length - 1; i++) {
+			sb.append(arr[i].toString());
+			sb.append(", ");
+		}
+		sb.append(arr[arr.length - 1].toString());
+		sb.append("]");
+		return sb.toString();
 	}
 
 	@Test

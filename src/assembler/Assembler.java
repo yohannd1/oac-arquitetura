@@ -171,8 +171,6 @@ public class Assembler {
 		// update the program offset
 		programOffset = execProgram.size();
 
-		System.out.printf(">> programOffset=%d, %s\n", programOffset, arrayListToString(execProgram));
-
 		// copy the object program data over to the executable
 		for (String s : objProgram)
 			execProgram.add(s);
@@ -180,6 +178,9 @@ public class Assembler {
 		replaceAllVariables();
 		replaceLabels();
 		replaceRegisters();
+
+		// add halt instruction
+		execProgram.add(Integer.toString(-1));
 	}
 
 	/**
@@ -249,7 +250,6 @@ public class Assembler {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		for (String l : execProgram)
 			writer.write(l + "\n");
-		writer.write("-1"); //-1 is a flag indicating that the program is finished
 		writer.close();
 	}
 

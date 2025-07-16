@@ -1208,7 +1208,7 @@ public class Architecture {
 		String commandName = (id == null) ? ( (cmd == -1) ? "halt" : "invalid command, will halt" ) : id.toString();
 
 		System.out.printf("PC (and 5 next): ");
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 6; i++) {
 			int pos = PC.getData();
 			if (pos < 0 || pos + i >= getMemorySize())
 				break;
