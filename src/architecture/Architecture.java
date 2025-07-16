@@ -423,72 +423,178 @@ public class Architecture {
 		PC.store();                    // PC <- bus(int)
 	}
 
-	public void move_mr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+	public void move_mr() { // MOVE mem -> reg
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// get the value in memory
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		IR.store();           // IR <- bus(int)
 
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-        memory.read();
-		memory.read();
-		intBus.put(extBus.get());
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-		demux.setValue(regA_id);
-		registersStore();
+		// get the register id
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+
+		demux.setValue(intBus.get()); // RegID <- bus(int)
+		IR.read();                    // IR -> bus(int)
+		registersStore();             // Reg(x) <- bus(int) (demux)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 	}
 
-	public void move_rm() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+	public void move_rm() { // MOVE reg -> mem
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int mem_addr = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// get the register id, and read the value of said register
+		// the new PC value is already on ULA(1)
+		ula.read(1);                  // ULA(1) -> bus(ext)
+		memory.read();                // Mem(r) <- bus(ext)
+		ula.store(1);                 // ULA(1) <- bus(ext)
+		ula.internalRead(1);          // ULA(1) -> bus(int)
+		demux.setValue(intBus.get()); // RegID <- bus(int)
+		registersRead();              // Reg(x) -> bus(int) (demux)
+		IR.store();                   // IR <- bus(int)
 
-		intBus.put(mem_addr);
-		extBus.put(intBus.get());
-		memory.store();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-		demux.setValue(regA_id);
-		registersRead();
-		extBus.put(intBus.get());
-		memory.store();
+		// get the memory address, and feed it back in store mode
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		memory.store();       // Mem(s) <- bus(ext)
+		IR.read();            // IR -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.store();       // Mem(s) <- bus(ext)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 	}
 
-	public void move_rr() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+	public void move_rr() { // MOVE regA -> regB
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regB_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// get regA id
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
 
-		demux.setValue(regA_id);
-		registersRead();
+		// read value of regA and put it in IR
+		demux.setValue(intBus.get()); // RegID <- bus(int)
+		registersRead() ;             // Reg(x) -> bus(int) (demux)
+		IR.store();                   // IR <- bus(int)
 
-		demux.setValue(regB_id);
-		registersStore();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// get regB id
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+
+		demux.setValue(intBus.get()); // RegID <- bus(int)
+		IR.read();                    // IR -> bus(int)
+		registersStore();             // Reg(x) <- bus(int) (demux)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 	}
 
-	public void move_ir() {
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int immediate = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+	public void move_ir() { // MOVE immediate -> reg
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-        PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-        int regA_id = intBus.get();
-        PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// get the immediate value and put it in IR
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		IR.store();           // IR <- bus(int)
 
-		intBus.put(immediate);
-		demux.setValue(regA_id);
-		registersStore();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// get the register ID and put it in the internal bus
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+
+		demux.setValue(intBus.get()); // RegID <- bus(int)
+		IR.read();                    // IR -> bus(int)
+		registersStore();             // Reg(x) <- bus(int) (demux)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 	}
 
 	public void inc_r() {
@@ -557,45 +663,116 @@ public class Architecture {
 		PC.store();
 	}
 
-	public void jmp() {
-		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		int addr = intBus.get();
 
-		intBus.put(addr);
-		PC.store();
+	public void jmp() {
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// get the value in memory
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		IR.store();           // IR <- bus(int)
+		PC.store();           // PC <- bus(int)
 	}
 
 	public void jn() {
-		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		int addr = intBus.get();
-		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-		if (Flags.getBit(1) == 1) {
-			intBus.put(addr);
-			PC.store();
-		}
+		// get the jump address and put it in Status(1)
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		statusMem.storeIn1(); // Status(1) <- bus(int)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// put the not-jump address in Status(0)
+		statusMem.storeIn0(); // Status(0) <- bus(int)
+
+		intBus.put(Flags.getBit(1));
+		statusMem.read();
+		PC.store();
 	}
 
 	public void jz() {
-		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		int addr = intBus.get();
-		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-		if (Flags.getBit(0) == 1) {
-			intBus.put(addr);
-			PC.store();
-		}
+		// get the jump address and put it in Status(1)
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		statusMem.storeIn1(); // Status(1) <- bus(int)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// put the not-jump address in Status(0)
+		statusMem.storeIn0(); // Status(0) <- bus(int)
+
+		intBus.put(Flags.getBit(0));
+		statusMem.read();
+		PC.store();
 	}
 
 	public void jnz() {
-		PC.read(); extBus.put(intBus.get()); memory.read(); memory.read(); intBus.put(extBus.get());
-		int addr = intBus.get();
-		PC.read(); ula.store(0); ula.inc(); ula.read(0); PC.store();
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
 
-		if (Flags.getBit(0) == 0) {
-			intBus.put(addr);
-			PC.store();
-		}
+		// get the jump address and put it in Status(0)
+		// the new PC value is already on ULA(1)
+		ula.read(1);          // ULA(1) -> bus(ext)
+		memory.read();        // Mem(r) <- bus(ext)
+		ula.store(1);         // ULA(1) <- bus(ext)
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		statusMem.storeIn0(); // Status(1) <- bus(int)
+
+		// pc++
+		PC.read();            // PC -> bus(int)
+		ula.internalStore(1); // ULA(1) <- bus(int)
+		ula.inc();            // ULA++
+		ula.internalRead(1);  // ULA(1) -> bus(int)
+		PC.store();           // PC <- bus(int)
+
+		// put the not-jump address in Status(1)
+		statusMem.storeIn1(); // Status(0) <- bus(int)
+
+		intBus.put(Flags.getBit(0));
+		statusMem.read();
+		PC.store();
 	}
 
 	public void jeq() {
