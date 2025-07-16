@@ -4,6 +4,9 @@
 	c
 	d
 
+	; this doesn't really change anything
+	add %reg0 %reg1
+
 	move 10 %reg0
 	move 15 %reg1
 	add %reg0 %reg1

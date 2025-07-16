@@ -8,11 +8,11 @@ set -ue
 progname=$(basename "$0")
 
 showHelp() {
-  printf >&2 "Usage: %s { build | run | test | clean }\n" "$progname"
+  printf >&2 "Usage: %s { build | run <PROGRAM> | test | clean }\n" "$progname"
   exit 2
 }
 
-[ $# = 1 ] || showHelp
+[ $# = 0 ] && showHelp || true
 
 makeClassPath() {
   printf "%s:" "$buildDir" "$depsDir"/*.jar
@@ -64,8 +64,8 @@ doRun() {
   doBuild
   classPath=$(makeClassPath)
 
-  run java -cp "$classPath" assembler.Assembler program
-  run java -cp "$classPath" architecture.Architecture program
+  run java -cp "$classPath" assembler.Assembler "$1"
+  run java -cp "$classPath" architecture.Architecture "$1"
 }
 
 doTest() {
@@ -75,9 +75,22 @@ doTest() {
 }
 
 case "$1" in
-  build) doBuild ;;
-  clean) doClean ;;
-  run) doRun ;;
-  test) doTest ;;
+  build)
+    [ $# = 1 ] || showHelp
+    doBuild
+    ;;
+  clean)
+    [ $# = 1 ] || showHelp
+    doClean
+    ;;
+  run)
+    [ $# = 2 ] || showHelp
+    shift
+    doRun "$@"
+    ;;
+  test)
+    [ $# = 1 ] || showHelp
+    doTest
+    ;;
   *) showHelp ;;
 esac

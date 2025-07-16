@@ -1,0 +1,24 @@
+a
+b
+move 10 %reg0
+move 5 %reg1
+lba:
+sub %reg1 %reg0
+jn lba
+jz lbb
+move 10 %reg0     
+lbb:
+move 5 %reg1
+move %reg1 a
+move 1 %reg2
+move %reg2 b
+lbc:
+sub %reg2 %reg1
+jnz lbc
+move 3 %reg3
+move %reg3 %reg1
+lbd:
+sub %reg2 %reg1
+jz end
+jmp lbd
+end:
