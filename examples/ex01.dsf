@@ -5,7 +5,11 @@
 	c
 	d
 
-	; this doesn't really change anything
+start:
+	jmp main
+
+test1:
+	; 0 + 0 = 0, I guess
 	add %reg0 %reg1
 
 	move 10 %reg0
@@ -17,9 +21,66 @@
 	; at this point, a=15
 
 	inc %reg1
-	inc a
-	; at this point, a=16 and %reg1=16
+	; at this point, %reg1=16
 
 	move a %reg0
+	; at this point, %reg0=15
+
 	sub %reg1 %reg0
-	; at this point, %reg0=0 and %reg1 is still 16
+	; at this point, %reg0=1 and %reg1 is still 16
+
+	ret
+
+test2:
+	move 0 %reg0
+	move %reg0 %reg1
+	; so %reg0=0 and %reg1=0
+
+	add %reg0 a
+	jz test2end
+	add a %reg0
+
+test2end:
+	ret
+
+test3:
+	move 0 %reg1
+	move 1 %reg2
+	jeq %reg1 %reg2 test3end
+	jlw %reg1 %reg2 test3end2
+
+test3end:
+	ret
+
+test3end2:
+	sub %reg0 %reg1
+	sub %reg0 a
+	ret
+
+test4:
+	move 0 %reg0
+	move %reg0 a
+
+test4loop:
+	inc a
+	move 3 %reg1
+	sub a %reg1
+	jn test4loop
+
+test4end:
+	ret
+
+main:
+	call test1
+	call test2
+	call test3
+	call test4
+
+	move 10 %reg0
+	move 10 %reg1
+	jgt %reg0 %reg1 main
+
+	add %reg0 %reg0
+	jnz end
+	move 0 %reg0
+end:
