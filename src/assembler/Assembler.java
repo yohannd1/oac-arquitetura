@@ -18,21 +18,23 @@ public class Assembler {
 	private ArrayList<String> lines;
 	private ArrayList<String> objProgram;
 	private ArrayList<String> execProgram;
-	private ArrayList<String> labels;
-	private ArrayList<Integer> labelsAdresses;
+	private ArrayList<String> labelNames;
+	private ArrayList<Integer> labelAddresses;
+	private ArrayList<String> macroNames;
+	private ArrayList<String> macroValues;
 	private ArrayList<String> variables;
 	private Architecture arch;
-	int programOffset;
 
 	public Assembler() {
 		lines = new ArrayList<>();
-		labels = new ArrayList<>();
-		labelsAdresses = new ArrayList<>();
+		labelNames = new ArrayList<>();
+		labelAddresses = new ArrayList<>();
 		variables = new ArrayList<>();
 		objProgram = new ArrayList<>();
 		execProgram = new ArrayList<>();
+		macroNames = new ArrayList<>();
+		macroValues = new ArrayList<>();
 		arch = new Architecture();
-		programOffset = 0;
 	}
 
 	public ArrayList<String> getObjProgram() {
@@ -45,11 +47,11 @@ public class Assembler {
 	 * @param lines
 	 */
 	protected ArrayList<String> getLabels() {
-		return labels;
+		return labelNames;
 	}
 
 	protected ArrayList<Integer> getLabelsAddresses() {
-		return labelsAdresses;
+		return labelAddresses;
 	}
 
 	protected ArrayList<String> getVariables() {
@@ -97,6 +99,14 @@ public class Assembler {
 	}
 
 	/**
+	 * Add the prefix to the program (register initialization).
+	 */
+	private void addPrefix(int at) {
+		lines.add(at, "move $stackbottom %stktop");
+		lines.add(at + 1, "move $stackbottom %stkbot");
+	}
+
+	/**
 	 * Scan the lines from the loaded file, attributing meaning to each line.
 	 *
 	 * @param lines
@@ -121,6 +131,8 @@ public class Assembler {
 			}
 		}
 
+		addPrefix(i);
+
 		// parse the rest
 		while (i < lines.size()) {
 			String currentLine = lines.get(i).trim();
@@ -132,8 +144,8 @@ public class Assembler {
 				i++;
 			} else if ((labelName = Parser.parseLabelDecl(currentLine)) != null) {
 				// this line is a label declaration
-				labels.add(labelName);
-				labelsAdresses.add(objProgram.size());
+				labelNames.add(labelName);
+				labelAddresses.add(objProgram.size());
 				i++;
 			} else if ((command = Parser.parseCommand(currentLine.split(" "))) != null) {
 				// this line is a command
@@ -142,7 +154,6 @@ public class Assembler {
 					if (!arg.isEmpty())
 						objProgram.add(arg);
 				}
-
 				i++;
 			} else {
 				throw new ParseException("could not parse line " + (i + 1) + ": " + currentLine);
@@ -156,25 +167,15 @@ public class Assembler {
 		// allocate memory space to store program and variables
 		execProgram = new ArrayList<>();
 
-		// add the initial stack pointer initialization
 		int stackBottom = arch.getMemorySize() - variables.size();
-		for (String rn : new String[] { "StkBOT", "StkTOP" }) {
-			int rid = arch.getRegisterID(rn);
-			if (rid < 0)
-				throw new RuntimeException(String.format("could not find register with name '%s'\n", rn));
-
-			execProgram.add(Integer.toString(CommandID.MOVE_IMM_REG.toInt()));
-			execProgram.add(Integer.toString(stackBottom));
-			execProgram.add(Integer.toString(rid));
-		}
-
-		// update the program offset
-		programOffset = execProgram.size();
+		macroNames.add("stackbottom");
+		macroValues.add(Integer.toString(stackBottom));
 
 		// copy the object program data over to the executable
 		for (String s : objProgram)
 			execProgram.add(s);
 
+		replaceMacros();
 		replaceAllVariables();
 		replaceLabels();
 		replaceRegisters();
@@ -259,15 +260,31 @@ public class Assembler {
 	 */
 	protected void replaceLabels() {
 		int i = 0;
-		for (String label : labels) { // searching all labels
+		for (String label : labelNames) { // searching all labels
 			label = "&" + label;
-			int labelAddress = labelsAdresses.get(i);
+			int labelAddress = labelAddresses.get(i);
 			for (int j = 0; j < execProgram.size(); j++) {
 				if (execProgram.get(j).equals(label)) { // this label must be replaced by the address
-					execProgram.set(j, Integer.toString(programOffset + labelAddress));
+					execProgram.set(j, Integer.toString(labelAddress));
 				}
 			}
 			i++;
+		}
+	}
+
+	/**
+	 * Replace each macro directive in the executable program by its respective value.
+	 */
+	protected void replaceMacros() {
+		for (int i = 0; i < macroNames.size(); i++) {
+			String name = macroNames.get(i);
+			String value = macroValues.get(i);
+
+			String query = "$" + name;
+			for (int j = 0; j < execProgram.size(); j++) {
+				if (execProgram.get(j).equals(query))
+					execProgram.set(j, value);
+			}
 		}
 	}
 
@@ -292,14 +309,14 @@ public class Assembler {
 	 * Check if all labels and variables in the object program were in the
 	 * source program.
 	 *
-	 * The `labels` and `variables` collections are used for this.
+	 * The `labelNames` and `variables` collections are used for this.
 	 */
 	protected void checkProperDeclaration() {
 		for (String line : objProgram) {
 			boolean found = false;
 			if (line.startsWith("&")) { // if starts with "&", it is a label or a variable
 				line = line.substring(1, line.length());
-				if (!labels.contains(line) && !variables.contains(line))
+				if (!labelNames.contains(line) && !variables.contains(line))
 					throw new RuntimeException(String.format("variable or label '%s' not declared!\n", line));
 			}
 		}
@@ -311,8 +328,9 @@ public class Assembler {
 	private static class Parser {
 		static private Pattern VARIABLE_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*$");
 		static private Pattern LABEL_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*:\\s*$");
+		static private Pattern MACRO_PATT = Pattern.compile("^\\s*\\$([a-zA-Z][a-zA-Z0-9]*)\\s*$");
 		static private Pattern NUMBER_PATT = Pattern.compile("^[-+]?[0-9]+$");
-		static private Pattern REG_PATT = Pattern.compile("^%reg[0-9]+$");
+		static private Pattern REG_PATT = Pattern.compile("^%[a-zA-Z0-9]+$");
 
 		/**
 		 * Attempt to parse a variable declaration.
@@ -330,6 +348,10 @@ public class Assembler {
 
 		static protected boolean isNumber(String s) {
 			return NUMBER_PATT.matcher(s).find();
+		}
+
+		static protected boolean isMacro(String s) {
+			return MACRO_PATT.matcher(s).find();
 		}
 
 		static protected boolean isRegName(String s) {
@@ -438,9 +460,13 @@ public class Assembler {
 						return null;
 					args[i - 1] = token;
 				} else if (sig.equals("imm")) {
-					if (!isNumber(token))
+					if (isNumber(token)) {
+						args[i - 1] = Integer.toString(Integer.parseInt(token));
+					} else if (isMacro(token)) {
+						args[i - 1] = token;
+					} else {
 						return null;
-					args[i - 1] = Integer.toString(Integer.parseInt(token));
+					}
 				} else {
 					throw new ParseException(
 						String.format("unexpected argument type: %s", sig));
