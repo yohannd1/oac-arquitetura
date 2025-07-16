@@ -38,12 +38,24 @@ public class TestArchitecture {
 		});
 		arch.tGetIntBus().put(25);
 		arch.tGetREG0().store();
-
 		arch.tGetIntBus().put(10);
 		arch.tGetREG1().store();
-
 		arch.controlUnitCycle();
 		assertEquals(35, arch.tGetREG1().getData());
+		assertEquals(0, arch.tGetFlags().getBit(0)); // not zero
+		assertEquals(0, arch.tGetFlags().getBit(1)); // not negative
+
+		arch = makeArchWithProgram(new int[] {
+			CommandID.ADD_REG_REG.toInt(), 1, 2,
+		});
+		arch.tGetIntBus().put(0);
+		arch.tGetREG0().store();
+		arch.tGetIntBus().put(0);
+		arch.tGetREG1().store();
+		arch.controlUnitCycle();
+		assertEquals(0, arch.tGetREG1().getData());
+		assertEquals(1, arch.tGetFlags().getBit(0)); // zero
+		assertEquals(0, arch.tGetFlags().getBit(1)); // not negative
 	}
 
 	@Test
