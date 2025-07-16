@@ -99,4 +99,15 @@ public class TestAssembler {
 		int[] bytes = new int[] { 12, 5, 9, 5, 1, 9, 5, 1 };
 		compileAndExpectStarts(program, bytes, minimumLength);
 	}
+
+	@Test
+	public void testImmSign() {
+		String[] program = new String[] {
+			"move -8 %reg0",
+			"move 5 %reg0",
+			"move +10 %reg0",
+		};
+		int[] bytes = new int[] { 9, -8, 1, 9, 5, 1, 9, 10, 1 };
+		compileAndExpectStarts(program, bytes, minimumLength);
+	}
 }

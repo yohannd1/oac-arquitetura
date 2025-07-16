@@ -305,7 +305,7 @@ public class Assembler {
 	private static class Parser {
 		static private Pattern VARIABLE_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*$");
 		static private Pattern LABEL_PATT = Pattern.compile("^\\s*([a-zA-Z][a-zA-Z0-9]*)\\s*:\\s*$");
-		static private Pattern NUMBER_PATT = Pattern.compile("^[0-9]+$");
+		static private Pattern NUMBER_PATT = Pattern.compile("^[-+]?[0-9]+$");
 		static private Pattern REG_PATT = Pattern.compile("^%reg[0-9]+$");
 
 		/**
@@ -434,7 +434,7 @@ public class Assembler {
 				} else if (sig.equals("imm")) {
 					if (!isNumber(token))
 						return null;
-					args[i - 1] = token;
+					args[i - 1] = Integer.toString(Integer.parseInt(token));
 				} else {
 					throw new ParseException(
 						String.format("unexpected argument type: %s", sig));
