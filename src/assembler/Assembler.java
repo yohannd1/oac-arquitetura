@@ -22,6 +22,7 @@ public class Assembler {
 	private ArrayList<Integer> labelsAdresses;
 	private ArrayList<String> variables;
 	private Architecture arch;
+	int programOffset;
 
 	public Assembler() {
 		lines = new ArrayList<>();
@@ -31,6 +32,7 @@ public class Assembler {
 		objProgram = new ArrayList<>();
 		execProgram = new ArrayList<>();
 		arch = new Architecture();
+		programOffset = 0;
 	}
 
 	public ArrayList<String> getObjProgram() {
@@ -151,6 +153,10 @@ public class Assembler {
 	public void buildExecutable() {
 		checkProperDeclaration();
 
+		// allocate memory space to store program and variables
+		execProgram = new ArrayList<>();
+
+		// add the initial stack pointer initialization
 		int stackBottom = arch.getMemorySize() - variables.size();
 		for (String rn : new String[] { "StkBOT", "StkTOP" }) {
 			int rid = arch.getRegisterID(rn);
@@ -162,9 +168,12 @@ public class Assembler {
 			execProgram.add(Integer.toString(rid));
 		}
 
-		// allocate memory space to store program and variables,
-		// and copy the object program data over there
-		execProgram = new ArrayList<>();
+		// update the program offset
+		programOffset = execProgram.size();
+
+		System.out.printf(">> programOffset=%d, %s\n", programOffset, arrayListToString(execProgram));
+
+		// copy the object program data over to the executable
 		for (String s : objProgram)
 			execProgram.add(s);
 
@@ -252,14 +261,11 @@ public class Assembler {
 		int i = 0;
 		for (String label : labels) { // searching all labels
 			label = "&" + label;
-			int labelPointTo = labelsAdresses.get(i);
-			int lineNumber = 0;
-			for (String l : execProgram) {
-				if (l.equals(label)) { // this label must be replaced by the address
-					String newLine = Integer.toString(labelPointTo); // the address
-					execProgram.set(lineNumber, newLine);
+			int labelAddress = labelsAdresses.get(i);
+			for (int j = 0; j < execProgram.size(); j++) {
+				if (execProgram.get(j).equals(label)) { // this label must be replaced by the address
+					execProgram.set(j, Integer.toString(programOffset + labelAddress));
 				}
-				lineNumber++;
 			}
 			i++;
 		}

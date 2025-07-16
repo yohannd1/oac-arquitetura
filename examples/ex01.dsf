@@ -1,4 +1,5 @@
-	; vim: ft=asm
+; vim: ft=asm
+
 	a
 	b
 	c
@@ -22,19 +23,3 @@
 	move a %reg0
 	sub %reg1 %reg0
 	; at this point, %reg0=0 and %reg1 is still 16
-
-	; TODO: add these to the code:
-	; add <mem> %<regA>          || RegA <- memória[mem] + RegA
-	; add %<regA> <mem>          || Memória[mem] <- RegA + memória[mem]
-	; sub <mem> %<regA>          || RegA <- memória[mem] - RegA
-	; sub %<regA> <mem>          || memória[mem] <- RegA - memória[mem]
-	; move %<regA> %<regB>       || RegB <- RegA
-	; jmp <mem>                  || PC <- mem (desvio incondicional)
-	; jn <mem>                   || se última operação<0 então PC <- mem (desvio condicional)
-	; jz <mem>                   || se última operação=0 então PC <- mem (desvio condicional)
-	; jnz <mem>                  || se última operação|=0 então PC <- mem (desvio condicional)
-	; jeq %<regA> %<regB> <mem>  || se RegA==RegB então PC <- mem (desvio condicional)
-	; jgt %<regA> %<regB> <mem>  || se RegA>RegB então PC <- mem (desvio condicional)
-	; jlw %<regA> %<regB> <mem>  || se RegA<RegB então PC <- mem (desvio condicional)
-	; call <mem>                 || PC <- mem ( (desvio incondicional) mas, antes de desviar, empilha o endereço de retorno (endereço da instrução imediatamente posterior ao call (push(PC++) )
-	; ret                        || PC <- pop() (desvio incondicional)

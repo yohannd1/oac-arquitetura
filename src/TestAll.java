@@ -30,6 +30,26 @@ public class TestAll {
 		return architecture;
 	}
 
+	static private Architecture runFile(String path) {
+		Assembler assembler = new Assembler();
+
+		try {
+			assembler.read(path);
+			assembler.parseAll();
+		} catch (ParseException ex) {
+			throw new RuntimeException("Failed to run assembler: " + ex);
+		} catch (IOException ex) {
+			throw new RuntimeException("Failed to load file: " + ex);
+		}
+
+		String[] executable = assembler.makeExecutableLines();
+
+		Architecture architecture = new Architecture(false);
+		architecture.readExecLines(executable);
+		architecture.controlUnitEexec();
+		return architecture;
+	}
+
 	@Test
 	public void testImmMove() {
 		Architecture arch = runCode(new String[] {
@@ -52,25 +72,7 @@ public class TestAll {
 
 	@Test
 	public void testCall() {
-		// The strategy here is, beginning with reg0 = 3:
-		//   { double(); add() } yields reg0 = 11,
-		//   while { add(); double() } yields reg0 = 16
-		//
-		// So let's try to run the first case and the result can only be 11.
-		Architecture arch = runCode(new String[] {
-			"jmp main",
-			"double:",
-			"  add %reg0 %reg0",
-			"  ret",
-			"add:",
-			"  move 5 %reg1",
-			"  add %reg1 %reg0",
-			"  ret",
-			"main:",
-			"  move 3 %reg0",
-			"  call double",
-			"  call add",
-		});
+		Architecture arch = runFile("examples/ex03-call");
 		assertEquals(11, arch.tGetREG0().getData());
 	}
 }
